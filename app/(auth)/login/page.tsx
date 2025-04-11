@@ -1,15 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import {
   Form,
   FormControl,
@@ -31,6 +34,9 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -40,8 +46,33 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = (values: LoginFormValues) => {
-    console.log(values);
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      console.log("Login form values: ", values);
+      setIsLoading(true);
+
+      const result = await signIn("credentials", {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      toast.success("Logged in successfully!");
+      router.push("/");
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to login");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl: "/" });
   };
 
   return (
@@ -92,6 +123,7 @@ export default function LoginPage() {
                               type="email"
                               placeholder="Enter your email"
                               className="border border-blue-300"
+                              disabled={isLoading}
                               {...field}
                             />
                           </FormControl>
@@ -117,6 +149,7 @@ export default function LoginPage() {
                               type="password"
                               placeholder="Write a password"
                               className="border border-gray-200"
+                              disabled={isLoading}
                               {...field}
                             />
                           </FormControl>
@@ -129,7 +162,7 @@ export default function LoginPage() {
                       )}
                     />
 
-                    <div className="flex flex-row justify-between">
+                    <div className="flex flex-row justify-between items-center ">
                       <FormField
                         control={form.control}
                         name="rememberMe"
@@ -140,6 +173,7 @@ export default function LoginPage() {
                                 id="remember"
                                 checked={field.value}
                                 onCheckedChange={field.onChange}
+                                disabled={isLoading}
                               />
                             </FormControl>
                             <FormLabel
@@ -152,7 +186,7 @@ export default function LoginPage() {
                         )}
                       />
 
-                      <div className="flex justify-between mb-4">
+                      <div className="flex">
                         <Link
                           href="/forgot-password"
                           className="text-sm text-indigo-600 hover:text-indigo-500"
@@ -165,8 +199,9 @@ export default function LoginPage() {
                     <Button
                       type="submit"
                       className="w-full bg-blue-700 hover:bg-blue-800 text-white mb-4"
+                      disabled={isLoading}
                     >
-                      Sign in
+                      {isLoading ? "Signing in..." : "Sign in"}
                     </Button>
                   </form>
                 </Form>
@@ -174,6 +209,8 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   className="w-full border border-gray-200 flex items-center justify-center gap-2"
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -202,7 +239,7 @@ export default function LoginPage() {
                 </Button>
 
                 <div className="mt-6 text-center text-sm text-gray-600">
-                  Don&rsquo;t have an account?
+                  <span> Don&rsquo;t have an account? </span>
                   <Link
                     href="/register"
                     className="font-medium text-indigo-600 hover:text-indigo-500"
@@ -212,9 +249,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="mt-8 text-center text-xs text-gray-500">
-                © FLAT
-              </div>
+              <div className="mt-8 text-center text-gray-500">© FLAT</div>
             </div>
           </div>
         </CardContent>

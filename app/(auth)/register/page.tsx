@@ -1,13 +1,17 @@
 "use client";
-import React from "react";
+
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
+import Link from "next/link";
+import Image from "next/image";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
-import Image from "next/image";
 import {
   Form,
   FormControl,
@@ -19,7 +23,7 @@ import {
 const registerSchema = z
   .object({
     name: z.string().min(2, {
-      message: "Name must be at least 1 character.",
+      message: "Name must be at least 2 characters.",
     }),
     email: z.string().email({
       message: "Please enter a valid email address.",
@@ -39,6 +43,9 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -49,8 +56,50 @@ export default function RegisterPage() {
     },
   });
 
-  const onSubmit = (values: RegisterFormValues) => {
-    console.log(values);
+  const onSubmit = async (values: RegisterFormValues) => {
+    try {
+      setIsLoading(true);
+
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          password: values.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Registration failed");
+      }
+
+      const result = await signIn("credentials", {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      toast.success("Welcome!");
+      router.push("/");
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl: "/" });
   };
 
   return (
@@ -58,7 +107,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-[1172px] mx-auto overflow-hidden">
         <CardContent className="p-0">
           <div className="flex flex-col md:flex-row">
-            {/* Левая часть с формой */}
+            {/* Left side with form */}
             <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-between relative">
               <div className="space-y-4">
                 <h1 className="text-3xl font-bold">Sign up</h1>
@@ -80,6 +129,7 @@ export default function RegisterPage() {
                             <Input
                               placeholder="Enter your name"
                               className="border border-gray-200"
+                              disabled={isLoading}
                               {...field}
                             />
                           </FormControl>
@@ -105,6 +155,7 @@ export default function RegisterPage() {
                               type="email"
                               placeholder="Enter your email"
                               className="border border-blue-300"
+                              disabled={isLoading}
                               {...field}
                             />
                           </FormControl>
@@ -130,6 +181,7 @@ export default function RegisterPage() {
                               type="password"
                               placeholder="Create a password"
                               className="border border-gray-200"
+                              disabled={isLoading}
                               {...field}
                             />
                           </FormControl>
@@ -156,6 +208,7 @@ export default function RegisterPage() {
                               type="password"
                               placeholder="Repeat a password"
                               className="border border-gray-200"
+                              disabled={isLoading}
                               {...field}
                             />
                           </FormControl>
@@ -171,8 +224,9 @@ export default function RegisterPage() {
                     <Button
                       type="submit"
                       className="w-full bg-blue-700 hover:bg-blue-800 text-white mt-6"
+                      disabled={isLoading}
                     >
-                      Create account
+                      {isLoading ? "Creating account..." : "Create account"}
                     </Button>
                   </form>
                 </Form>
@@ -180,6 +234,8 @@ export default function RegisterPage() {
                 <Button
                   variant="outline"
                   className="w-full border border-gray-200 flex items-center justify-center gap-2"
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -238,12 +294,12 @@ export default function RegisterPage() {
                 </span>
               </div>
 
-              {/* Декоративные элементы */}
+              {/* Decorative elements */}
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full border-[30px] border-blue-800 opacity-20 -translate-y-1/2 translate-x-1/2"></div>
               <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full border-[30px] border-blue-800 opacity-20 translate-y-1/2 -translate-x-1/2"></div>
             </div>
 
-            {/* Правая часть с изображением */}
+            {/* Right side with image */}
             <div className="hidden md:block md:w-1/2">
               <div className="h-full relative">
                 <Image
