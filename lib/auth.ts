@@ -28,7 +28,11 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
+    error: "/login", // Custom error page that will display friendly error messages
   },
+  // Enable debug in development
+  debug: process.env.NODE_ENV === "development",
+
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -58,12 +62,58 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.image,
+          image: user?.image,
         };
       },
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      // Allow sign-in with credentials regardless of email verification
+      if (credentials) {
+        return true;
+      }
+
+      // For OAuth providers, check if a user with this email already exists
+      if (account && account.provider === "google") {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+          include: { accounts: true },
+        });
+
+        // If no user exists or user exists but doesn't have a Google account
+        if (!existingUser) {
+          return true; // Allow sign-in & creation
+        } else {
+          // User exists, let's link the Google account to the existing user
+          // Check if this Google account is already linked to the user
+          const linkedAccount = existingUser.accounts.find(
+            (acc) => acc.provider === "google",
+          );
+
+          if (!linkedAccount) {
+            // Link the Google account to the existing user
+            await prisma.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              },
+            });
+          }
+          return true;
+        }
+      }
+
+      return true;
+    },
+
     async jwt({ token, user, account }) {
       if (user) {
         token.userId = user.id;
@@ -79,7 +129,7 @@ export const authOptions: NextAuthOptions = {
             name: user?.name || token.name,
           },
           process.env.NEXTAUTH_SECRET!,
-          { expiresIn: "7d" }
+          { expiresIn: "7d" },
         );
         token.rawToken = rawToken;
       }
@@ -88,6 +138,14 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
+      const user = await prisma.user.findUnique({
+        where: { email: token?.email ?? undefined },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
       session.user.id = token.userId as string;
       if (token.rawToken) {
         session.rawToken = token.rawToken as string;

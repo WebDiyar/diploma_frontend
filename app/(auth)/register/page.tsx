@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import Image from "next/image";
-import { signIn } from "next-auth/react";
+import { signIn, useSession, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +45,32 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Check for session and save token on mount and when session changes
+  useEffect(() => {
+    const saveToken = async () => {
+      if (session?.rawToken) {
+        Cookies.set("jwt_token", session.rawToken, {
+          expires: 7, // Default to 7 days
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+        console.log("JWT Token saved:", session.rawToken);
+
+        // Redirect if we're on the register page
+        if (window.location.pathname === "/register") {
+          router.push("/");
+        }
+      }
+    };
+
+    if (status === "authenticated") {
+      saveToken();
+    }
+  }, [session, status, router]);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -88,9 +114,20 @@ export default function RegisterPage() {
         throw new Error(result.error);
       }
 
+      // Get the JWT token
+      const session = await getSession();
+      if (session?.rawToken) {
+        Cookies.set("jwt_token", session.rawToken, {
+          expires: 7,
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+        console.log("JWT Token saved (register):", session.rawToken);
+      }
+
       toast.success("Welcome!");
       router.push("/");
-      router.refresh();
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -99,7 +136,9 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSignIn = () => {
+    setIsLoading(true);
     signIn("google", { callbackUrl: "/" });
+    // Token will be handled in useEffect when session is updated
   };
 
   return (

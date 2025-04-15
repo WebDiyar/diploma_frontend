@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { getSession, signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { getSession, signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -35,8 +36,34 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
- const router = useRouter();
+  const router = useRouter();
+  // const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saveToken = async () => {
+      if (session?.rawToken) {
+        Cookies.set("jwt_token", session.rawToken, {
+          expires: 7, // Default to 7 days
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+        console.log("JWT Token saved:", session.rawToken);
+
+        // Redirect if we're on the login page
+        if (window.location.pathname === "/login") {
+          router.push("/");
+        }
+      }
+    };
+
+    if (status === "authenticated") {
+      saveToken();
+    }
+  }, [session, status, router]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -50,6 +77,7 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setIsLoading(true);
+      setErrorMessage(null);
 
       const result = await signIn("credentials", {
         email: values.email,
@@ -61,26 +89,37 @@ export default function LoginPage() {
 
       const session = await getSession();
       if (session?.rawToken) {
+        const expiryDays = values.rememberMe ? 7 : 1;
         Cookies.set("jwt_token", session.rawToken, {
-          expires: values.rememberMe ? 7 : undefined,
+          expires: expiryDays,
           path: "/",
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
         });
+        console.log("JWT Token saved (credentials):", session.rawToken);
       }
 
       toast.success("Logged in successfully");
       router.push("/");
-      router.refresh();
     } catch (error: any) {
+      setErrorMessage(error.message || "Login failed");
       toast.error(error.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/" });
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      await signIn("google", { callbackUrl: "/" });
+      // Token will be handled in useEffect when session is updated
+    } catch (error: any) {
+      setErrorMessage("Google sign-in failed. Please try again.");
+      toast.error(error.message || "Google sign-in failed");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -112,6 +151,12 @@ export default function LoginPage() {
                 <p className="text-gray-600 mb-8 text-center">
                   Welcome back! Please enter your details.
                 </p>
+
+                {errorMessage && (
+                  <Alert variant="destructive" className="mb-6">
+                    <AlertDescription>{errorMessage}</AlertDescription>
+                  </Alert>
+                )}
 
                 <Form {...form}>
                   <form

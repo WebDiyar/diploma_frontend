@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Provider from "./providers";
 import "./globals.css";
 import AuthProvider from "./AuthProvider";
+import TokenSync from "@/components/shared/TokenSync";
+import NavBar from "@/components/shared/NavBar";
 
 export const metadata: Metadata = {
   title: "Diploma",
@@ -17,7 +19,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <Provider>{children}</Provider>
+          <TokenSync />
+          <Provider>
+            {/* <NavBar/> */}
+            {children}
+          </Provider>
         </AuthProvider>
       </body>
     </html>
