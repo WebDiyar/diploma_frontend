@@ -6,9 +6,10 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,8 +35,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+ const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -48,7 +49,6 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      console.log("Login form values: ", values);
       setIsLoading(true);
 
       const result = await signIn("credentials", {
@@ -57,15 +57,23 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      if (result?.error) {
-        throw new Error(result.error);
+      if (result?.error) throw new Error(result.error);
+
+      const session = await getSession();
+      if (session?.rawToken) {
+        Cookies.set("jwt_token", session.rawToken, {
+          expires: values.rememberMe ? 7 : undefined,
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
       }
 
-      toast.success("Logged in successfully!");
+      toast.success("Logged in successfully");
       router.push("/");
       router.refresh();
     } catch (error: any) {
-      toast.error(error.message || "Failed to login");
+      toast.error(error.message || "Login failed");
     } finally {
       setIsLoading(false);
     }

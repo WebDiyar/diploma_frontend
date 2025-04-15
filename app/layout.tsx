@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Provider from "./providers";
 import "./globals.css";
+import AuthProvider from "./AuthProvider";
 
 export const metadata: Metadata = {
   title: "Diploma",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Provider>{children}</Provider>
+        <AuthProvider>
+          <Provider>{children}</Provider>
+        </AuthProvider>
       </body>
     </html>
   );
