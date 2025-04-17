@@ -120,19 +120,32 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.name = user.name;
       }
+      // Создаём JWT и добавляем в token
+      if (!token.rawToken) {
+        const payload = {
+          userId: token.userId,
+          email: token.email,
+          name: token.name,
+        };
 
-      if ((user && account) || user?.id) {
-        const rawToken = jwt.sign(
-          {
-            userId: user?.id || token.userId,
-            email: user?.email || token.email,
-            name: user?.name || token.name,
-          },
-          process.env.NEXTAUTH_SECRET!,
-          { expiresIn: "7d" },
-        );
+        const rawToken = jwt.sign(payload, process.env.NEXTAUTH_SECRET!, {
+          expiresIn: "7d",
+        });
+
         token.rawToken = rawToken;
       }
+      // if ((user && account) || user?.id) {
+      //   const rawToken = jwt.sign(
+      //     {
+      //       userId: user?.id || token.userId,
+      //       email: user?.email || token.email,
+      //       name: user?.name || token.name,
+      //     },
+      //     process.env.NEXTAUTH_SECRET!,
+      //     { expiresIn: "7d" },
+      //   );
+      //   token.rawToken = rawToken;
+      // }
 
       return token;
     },
