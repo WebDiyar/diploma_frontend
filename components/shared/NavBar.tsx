@@ -1,39 +1,143 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import Cookies from "js-cookie";
 
-export default function NavBar() {
+export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { data: session, status } = useSession();
+
+  // Handle scroll effect for navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleLogOut = async () => {
+    Cookies.remove("jwt_token");
+    await signOut({ callbackUrl: "/login" });
+  };
+
   return (
-    <header className=" py-4 px-4 md:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto ">
+    <header
+      className={`sticky top-0 w-full py-3 px-4 md:px-6 lg:px-8 z-50 transition-all duration-300 ${
+        scrolled ? "bg-white shadow-md" : "bg-white"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
           {/* Logo Section */}
-          <div className="flex-shrink-0 p-4">
+          <div className="flex-shrink-0">
             <Link href="/">
-              {/* Replace with actual logo */}
               <Image
                 src="/nav/aitu_logo.png"
-                alt="logo"
-                width={170}
-                height={75}
-                className=" object-cover"
+                alt="Astana IT University"
+                width={140}
+                height={55}
+                className="h-auto w-auto sm:w-[150px] md:w-[160px] lg:w-[170px] object-contain"
               />
             </Link>
           </div>
 
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-4 lg:space-x-8">
+            <Link
+              href="/"
+              className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
+            >
+              Home
+            </Link>
+            <Link
+              href="/landlords"
+              className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
+            >
+              Landlords
+            </Link>
+            <Link
+              href="/dashboard"
+              className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/about-us"
+              className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
+            >
+              About Us
+            </Link>
+          </nav>
+
+          {/* Login and CTA Section */}
+          <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
+            {session?.rawToken ? (
+              <>
+                <Button
+                  onClick={handleLogOut}
+                  className="text-white bg-red-600 hover:bg-red-700"
+                >
+                  Log out
+                </Button>
+                <span>{session?.user.name}</span>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
+              >
+                Log In
+              </Link>
+            )}
+
+            {/* Language selector icon */}
+            <div className="text-gray-600 cursor-pointer">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                />
+              </svg>
+            </div>
+
+            <Link
+              href="/rent-a-room"
+              className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-3 lg:px-4 text-sm lg:text-base border border-gray-400 rounded shadow transition-colors"
+            >
+              Rent a Room
+            </Link>
+          </div>
+
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center">
             <button
               type="button"
               className="text-gray-600 hover:text-gray-900 focus:outline-none"
               onClick={toggleMenu}
+              aria-label="Toggle menu"
             >
               <svg
                 className="h-6 w-6"
@@ -59,97 +163,73 @@ export default function NavBar() {
               </svg>
             </button>
           </div>
-
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex space-x-8 ">
-            <Link href="/" className="text-gray-600 hover:text-gray-900">
-              Home
-            </Link>
-            <Link
-              href="/landlords"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              Landlords
-            </Link>
-            <Link
-              href="/erasmus-life"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              Erasmus Life
-            </Link>
-            <Link
-              href="/about-us"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              About Us
-            </Link>
-          </nav>
-
-          {/* Login and CTA Section */}
-          <div className="hidden md:flex items-center space-x-4 ">
-            <Link href="/login" className="text-gray-600 hover:text-gray-900">
-              Log In
-            </Link>
-            <div className="h-5 flex items-center">
-              <span className="text-gray-400 mx-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M8.707 7.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414L11 7.586V3a1 1 0 10-2 0v4.586l-.293-.293z" />
-                  <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                </svg>
-              </span>
-            </div>
-            <Link
-              href="/rent-a-room"
-              className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-            >
-              Rent a Room
-            </Link>
-          </div>
         </div>
 
         {/* Mobile Navigation Menu */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-gray-200">
-            <div className="space-y-4 pb-3">
+          <div className="md:hidden fixed inset-x-0 top-[73px] bg-white shadow-lg z-40 overflow-hidden transition-all duration-300">
+            <div className="px-4 py-3 space-y-3 max-h-[calc(100vh-73px)] overflow-y-auto">
               <Link
                 href="/"
-                className="block text-gray-600 hover:text-gray-900"
+                className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
+                onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link
                 href="/landlords"
-                className="block text-gray-600 hover:text-gray-900"
+                className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
+                onClick={() => setIsMenuOpen(false)}
               >
                 Landlords
               </Link>
               <Link
-                href="/erasmus-life"
-                className="block text-gray-600 hover:text-gray-900"
+                href="/dashboard"
+                className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
+                onClick={() => setIsMenuOpen(false)}
               >
-                Erasmus Life
+                Dashboard
               </Link>
               <Link
                 href="/about-us"
-                className="block text-gray-600 hover:text-gray-900"
+                className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
+                onClick={() => setIsMenuOpen(false)}
               >
                 About Us
               </Link>
-              <div className="pt-4 border-t border-gray-200">
+
+              <div className="pt-2 flex flex-col space-y-3">
                 <Link
                   href="/login"
-                  className="block text-gray-600 hover:text-gray-900 mb-4"
+                  className="block text-gray-600 hover:text-gray-900 py-2"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   Log In
                 </Link>
+
+                {/* Language selector in mobile menu */}
+                <div className="flex items-center text-gray-600 py-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                    />
+                  </svg>
+                  <span>Language</span>
+                </div>
+
                 <Link
                   href="/rent-a-room"
                   className="block w-full text-center bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   Rent a Room
                 </Link>

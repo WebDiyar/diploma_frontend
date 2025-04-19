@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
     raw: true,
   });
 
-  console.log("Raw JWT in middleware:", token);
+  // console.log("Raw JWT in middleware:", token);
 
   return NextResponse.next();
 }

@@ -20,7 +20,7 @@ export default function Home() {
   }, [session]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
+    <div className="flex flex-col items-center justify-center my-4">
       <div className="w-full max-w-2xl bg-white rounded-xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
           Authentication Status
@@ -45,7 +45,7 @@ export default function Home() {
           )}
 
           {jwtToken && (
-            <div className="p-4 border border-gray-200 rounded-lg">
+            <div className="p-4 rounded-lg">
               <p className="text-lg font-semibold text-gray-700 mb-2">
                 JWT Token:
               </p>
