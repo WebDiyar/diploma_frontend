@@ -6,6 +6,8 @@ import { compare } from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 
+console.log("✅ NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+
 declare module "next-auth" {
   interface Session {
     accessToken?: string;
@@ -37,6 +39,13 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
     CredentialsProvider({
       name: "credentials",
