@@ -65,6 +65,12 @@ export default function Navbar() {
               Home
             </Link>
             <Link
+              href="/yandex"
+              className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
+            >
+              Yandex Map
+            </Link>
+            <Link
               href="/landlords"
               className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
             >

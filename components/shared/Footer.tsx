@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { SocialIcon } from "react-social-icons";
+import { Label } from "../ui/label";
 
 const Footer = () => {
   return (
@@ -16,9 +17,9 @@ const Footer = () => {
               <Image
                 src="/nav/aitu_logo.png"
                 alt="Astana IT University Logo"
-                width={56}
-                height={56}
-                className="object-contain"
+                width={140}
+                height={55}
+                className="h-auto w-auto sm:w-[150px] md:w-[160px] lg:w-[170px] object-contain"
               />
             </div>
 
@@ -71,12 +72,9 @@ const Footer = () => {
           <div className="flex flex-col space-y-1 md:space-y-4">
             <h3 className="text-base font-bold text-blue-700">TENANTS</h3>
             <nav className="flex flex-col space-y-3">
-              <Link
-                href="/video-chat"
-                className="text-base hover:text-blue-700 transition-colors"
-              >
+              <Label className="text-base hover:text-blue-700 transition-colors">
                 Video Chat
-              </Link>
+              </Label>
               <Link
                 href="/housing-guide"
                 className="text-base hover:text-blue-700 transition-colors"

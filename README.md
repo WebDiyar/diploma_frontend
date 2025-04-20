@@ -7,7 +7,7 @@ First, run the development server:
 ```bash
 git clone https://github.com/WebDiyar/diploma_frontend.git
 cd diploma_frontend
-npm install
+npm run postinstall
 put .env.example in .env
 npm run build
 npm run dev

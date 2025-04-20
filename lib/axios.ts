@@ -1,6 +1,7 @@
 import axios from "axios";
 import { AxiosInstance } from "axios";
 import Cookies from "js-cookie";
+import { useSession } from "next-auth/react";
 
 function createApiClient(baseURL: string): AxiosInstance {
   const instance = axios.create({
@@ -14,7 +15,8 @@ function createApiClient(baseURL: string): AxiosInstance {
 
   instance.interceptors.request.use(
     (config) => {
-      const token = Cookies.get("jwt_token");
+      const { data: session } = useSession();
+      const token = Cookies.get("jwt_token") || session?.rawToken;
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
