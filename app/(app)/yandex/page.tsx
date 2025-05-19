@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { YMaps, Map, Placemark } from "@pbe/react-yandex-maps";
-// import toast, { Toaster } from 'react-hot-toast';
 
 const API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY;
 

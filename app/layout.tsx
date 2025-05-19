@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import Provider from "./providers";
-import "./globals.css";
 import AuthProvider from "./AuthProvider";
-import NavBar from "@/components/shared/NavBar";
-import Footer from "@/components/shared/Footer";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Diploma",
@@ -21,12 +19,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <ToastContainer />
-          {/* <TokenSync /> */}
-          <Provider>
-            {/* <NavBar /> */}
-            {children}
-            {/* <Footer/> */}
-          </Provider>
+          <Provider>{children}</Provider>
         </AuthProvider>
       </body>
     </html>

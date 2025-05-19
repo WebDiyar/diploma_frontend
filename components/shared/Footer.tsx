@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,13 +13,14 @@ const Footer = () => {
           {/* Logo and Tagline */}
           <div className="flex flex-col space-y-1 md:space-y-4">
             <div className="flex items-center space-x-2">
-              <Image
+              <div className="w-[140px] h-[55px] bg-red-300"></div>
+              {/* <Image
                 src="/nav/aitu_logo.png"
                 alt="Astana IT University Logo"
                 width={140}
                 height={55}
                 className="h-auto w-auto sm:w-[150px] md:w-[160px] lg:w-[170px] object-contain"
-              />
+              /> */}
             </div>
 
             <p className="text-base font-medium">
@@ -76,7 +76,7 @@ const Footer = () => {
                 Video Chat
               </Label>
               <Link
-                href="/housing-guide"
+                href=""
                 className="text-base hover:text-blue-700 transition-colors"
               >
                 Housing Guide

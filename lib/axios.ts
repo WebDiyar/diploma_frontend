@@ -1,7 +1,6 @@
 import axios from "axios";
 import { AxiosInstance } from "axios";
 import Cookies from "js-cookie";
-import { useSession } from "next-auth/react";
 
 function createApiClient(baseURL: string): AxiosInstance {
   const instance = axios.create({
@@ -10,13 +9,12 @@ function createApiClient(baseURL: string): AxiosInstance {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    withCredentials: true,
+    // withCredentials: true,
   });
 
   instance.interceptors.request.use(
     (config) => {
-      const { data: session } = useSession();
-      const token = Cookies.get("jwt_token") || session?.rawToken;
+      const token = Cookies.get("jwt_token");
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -29,4 +27,4 @@ function createApiClient(baseURL: string): AxiosInstance {
   return instance;
 }
 
-export const api = createApiClient("http://localhost:8000");
+export const api = createApiClient("https://diploma-project-backend.fly.dev");

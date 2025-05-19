@@ -1,22 +1,41 @@
 "use client";
 
+import { api } from "@/lib/axios";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
-import { LogOut } from "lucide-react";
-import LogoutButton from "@/components/shared/LogoutButton";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const [jwtToken, setJwtToken] = useState("");
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
 
   useEffect(() => {
-    // Get token either from session or cookies
     const token = session?.rawToken;
     if (token) {
       console.log("JWT Token:", token);
       setJwtToken(token);
     }
+
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        
+        // Use your API client
+        const response = await api.get("/api/v1/profile");
+        
+        setProfile(response.data);
+        console.log('response', response.data)
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+    // Get token either from session or cookies
   }, [session]);
 
   return (
@@ -54,8 +73,6 @@ export default function Home() {
               </div>
             </div>
           )}
-
-          <LogoutButton />
         </div>
       </div>
     </div>

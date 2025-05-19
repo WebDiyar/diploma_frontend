@@ -46,13 +46,14 @@ export default function Navbar() {
           {/* Logo Section */}
           <div className="flex-shrink-0">
             <Link href="/">
-              <Image
+              <div className="w-[140px] h-[55px] bg-red-300"></div>
+              {/* <Image
                 src="/nav/aitu_logo.png"
                 alt="Astana IT University"
                 width={140}
                 height={55}
                 className="h-auto w-auto sm:w-[150px] md:w-[160px] lg:w-[170px] object-contain"
-              />
+              /> */}
             </Link>
           </div>
 
@@ -71,10 +72,10 @@ export default function Navbar() {
               Yandex Map
             </Link>
             <Link
-              href="/landlords"
+              href="/profile"
               className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
             >
-              Landlords
+              Profile
             </Link>
             <Link
               href="/dashboard"
@@ -233,7 +234,7 @@ export default function Navbar() {
                 </div>
 
                 <Link
-                  href="/rent-a-room"
+                  href="/landloads"
                   className="block w-full text-center bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
                   onClick={() => setIsMenuOpen(false)}
                 >

@@ -138,23 +138,12 @@ export const authOptions: NextAuthOptions = {
         };
 
         const rawToken = jwt.sign(payload, process.env.NEXTAUTH_SECRET!, {
+          algorithm: "HS256",
           expiresIn: "7d",
         });
 
         token.rawToken = rawToken;
       }
-      // if ((user && account) || user?.id) {
-      //   const rawToken = jwt.sign(
-      //     {
-      //       userId: user?.id || token.userId,
-      //       email: user?.email || token.email,
-      //       name: user?.name || token.name,
-      //     },
-      //     process.env.NEXTAUTH_SECRET!,
-      //     { expiresIn: "7d" },
-      //   );
-      //   token.rawToken = rawToken;
-      // }
 
       return token;
     },
