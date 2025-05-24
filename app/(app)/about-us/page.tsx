@@ -3,18 +3,13 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDownIcon, CheckIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import { toast } from "react-toastify";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
-const AboutUsPage = () => {
-  const [showMore, setShowMore] = useState<boolean>(false);
-
+export default function AboutUsPage() {
+  const [showMore, setShowMore] = useState<boolean>(true);
   const [formData, setFormData] = useState({
     fullName: "",
     question: "",
@@ -66,26 +61,12 @@ const AboutUsPage = () => {
             <div className="space-y-4 sm:space-y-6">
               <p className="text-gray-700 text-base sm:text-lg leading-relaxed">
                 Are you a student looking for accommodation near Astana IT
-                University? <br /> Our platform makes it easy to find, compare,
-                and book the best apartments near your university. We provide
-                verified landlords, secure payments, and a seamless booking
-                experience to ensure you get the best housing without stress.
+                University? Or maybe near your university? Our platform makes it
+                easy to find, compare, and book the best apartments near your
+                university. We provide verified landlords, secure payments, and
+                a seamless booking experience to ensure you get the best housing
+                without stress.
               </p>
-
-              <Collapsible>
-                <CollapsibleTrigger
-                  asChild
-                  onClick={() => setShowMore(!showMore)}
-                >
-                  <Button
-                    variant="link"
-                    className="text-blue-600 hover:text-blue-800 p-0 h-auto font-normal"
-                  >
-                    Show more
-                    <ChevronDownIcon className="h-4 w-4 ml-1" />
-                  </Button>
-                </CollapsibleTrigger>
-              </Collapsible>
             </div>
           </div>
         </div>
@@ -94,7 +75,7 @@ const AboutUsPage = () => {
       <Collapsible open={showMore}>
         <CollapsibleContent>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
-            <div className="bg-white p-6 sm:p-8 shadow-sm rounded-lg">
+            <div className="bg-white p-6 sm:p-8 shadow-lg rounded-lg ">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
                 Our Mission & Values
               </h2>
@@ -366,7 +347,7 @@ const AboutUsPage = () => {
           <div className="mt-6 sm:mt-8">
             <Button
               variant="outline"
-              className="bg-white text-gray-800 font-medium py-1.5 px-6 sm:py-2 sm:px-8 shadow-sm border-0"
+              className="bg-white text-gray-800 font-medium py-1.5 px-6 sm:py-2 sm:px-8 shadow-sm border-[0.3px] cursor-pointer"
             >
               Read More
             </Button>
@@ -404,7 +385,7 @@ const AboutUsPage = () => {
               className="w-full bg-white sm:w-auto flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-md border-0"
             />
             <Button
-              className="bg-[#D6DBEC] hover:bg-blue-200 text-[#25409C] font-medium py-2 sm:py-3 px-6 sm:px-8 rounded-md transition-colors border-0 shadow-sm"
+              className="bg-white hover:bg-blue-200 text-[#2143b3] font-medium py-2 sm:py-3 px-6 sm:px-8 rounded-md transition-colors border-0 shadow-sm"
               onClick={handleSubmit}
             >
               Send
@@ -414,6 +395,4 @@ const AboutUsPage = () => {
       </div>
     </div>
   );
-};
-
-export default AboutUsPage;
+}

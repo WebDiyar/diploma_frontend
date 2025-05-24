@@ -11,7 +11,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   useEffect(() => {
     const token = session?.rawToken;
     if (token) {
@@ -22,12 +21,15 @@ export default function Home() {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        
+
         // Use your API client
+        console.log("Fetching profile...", session);
+        console.log("session", session);
+        console.log("session?.user", session?.user);
         const response = await api.get("/api/v1/profile");
-        
+        console.log("response", response);
         setProfile(response.data);
-        console.log('response', response.data)
+        console.log("response", response.data);
       } catch (err) {
         console.error("Error fetching profile:", err);
       } finally {
@@ -63,7 +65,7 @@ export default function Home() {
             </div>
           )}
 
-          {jwtToken && (
+          {/* {jwtToken && (
             <div className="p-4 rounded-lg">
               <p className="text-lg font-semibold text-gray-700 mb-2">
                 JWT Token:
@@ -72,7 +74,7 @@ export default function Home() {
                 <code className="text-sm break-all">{jwtToken}</code>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

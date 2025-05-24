@@ -41,29 +41,23 @@ export default function LoginPage() {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   useEffect(() => {
     const saveToken = async () => {
       if (session?.rawToken) {
         Cookies.set("jwt_token", session.rawToken, {
-          expires: 7, // Default to 7 days
+          expires: 7,
           path: "/",
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
         });
         console.log("JWT Token saved:", session.rawToken);
-
-        // Redirect if we're on the login page
-        if (window.location.pathname === "/login") {
-          router.push("/");
-        }
       }
     };
 
     if (status === "authenticated") {
       saveToken();
     }
-  }, [session, status, router]);
+  }, [session, status]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

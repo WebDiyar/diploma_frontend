@@ -125,8 +125,8 @@ export default function RegisterPage() {
         });
         console.log("JWT Token saved (register):", session.rawToken);
       }
-
       toast.success("Welcome!");
+
       router.push("/");
     } catch (err: any) {
       toast.error(err.message);

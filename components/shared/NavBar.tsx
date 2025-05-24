@@ -6,13 +6,14 @@ import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { data: session, status } = useSession();
+  const router = useRouter();
 
-  // Handle scroll effect for navbar
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
@@ -46,14 +47,13 @@ export default function Navbar() {
           {/* Logo Section */}
           <div className="flex-shrink-0">
             <Link href="/">
-              <div className="w-[140px] h-[55px] bg-red-300"></div>
-              {/* <Image
+              <Image
                 src="/nav/aitu_logo.png"
                 alt="Astana IT University"
                 width={140}
                 height={55}
                 className="h-auto w-auto sm:w-[150px] md:w-[160px] lg:w-[170px] object-contain"
-              /> */}
+              />
             </Link>
           </div>
 
@@ -66,22 +66,16 @@ export default function Navbar() {
               Home
             </Link>
             <Link
-              href="/yandex"
+              href="/apartment"
               className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
             >
-              Yandex Map
+              My Apartments
             </Link>
             <Link
               href="/profile"
               className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
             >
               Profile
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
-            >
-              Dashboard
             </Link>
             <Link
               href="/about-us"
@@ -101,7 +95,14 @@ export default function Navbar() {
                 >
                   Log out
                 </Button>
-                <span>{session?.user.name}</span>
+                <span
+                  className="underline cursor-pointer "
+                  onClick={() => {
+                    router.push("/profile");
+                  }}
+                >
+                  {session?.user.name}
+                </span>
               </>
             ) : (
               <Link
@@ -184,18 +185,18 @@ export default function Navbar() {
                 Home
               </Link>
               <Link
-                href="/landlords"
+                href="/apartment"
                 className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Landlords
+                My Apartment
               </Link>
               <Link
-                href="/dashboard"
+                href="/profile"
                 className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Dashboard
+                Profile
               </Link>
               <Link
                 href="/about-us"
