@@ -111,13 +111,8 @@ const getImageUrl = (url: string) => {
     return url;
   }
 
-  if (url && url.length > 100 && url.match(/^[A-Za-z0-9+/=]+$/)) {
-    return `data:image/jpeg;base64,${url}`;
-  }
-
   return "https://source.unsplash.com/random/800x600/?apartment";
 };
-
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("kk-KZ", {
     style: "currency",
@@ -232,18 +227,16 @@ export default function ApartmentDetailPage() {
     try {
       const fullData = getFullApartmentData();
 
-      // Generate HTTP URLs instead of base64
-      const httpImageUrls = previewImages.map(
-        (_, index) =>
-          `https://picsum.photos/800/600?random=${Date.now()}-${index}`,
-      );
+    // Отправляем base64 строки как есть
+    const base64Images = previewImages.map(img => img.url);
 
-      const dataToSend = {
-        ...fullData,
-        apartmentId: apartmentId,
-        ownerId: fullData.ownerId || apartmentData?.ownerId || "",
-        pictures: httpImageUrls,
-      };
+    const dataToSend = {
+      ...fullData,
+      apartmentId: apartmentId,
+      ownerId: fullData.ownerId || apartmentData?.ownerId || "",
+      pictures: base64Images, // массив base64 строк
+    };
+
 
       console.log("Sending data to API:", dataToSend);
 
@@ -258,70 +251,127 @@ export default function ApartmentDetailPage() {
     }
   };
 
+  // const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = e.target.files;
+  //   if (!files || files.length === 0) return;
+
+  //   const validFiles: File[] = [];
+  //   const maxSize = 10 * 1024 * 1024;
+
+  //   Array.from(files).forEach((file) => {
+  //     if (file.size > maxSize) {
+  //       toast.error(`File "${file.name}" exceeds the 10MB limit`);
+  //       return;
+  //     }
+
+  //     if (!file.type.startsWith("image/")) {
+  //       toast.error(`File "${file.name}" is not an image`);
+  //       return;
+  //     }
+
+  //     validFiles.push(file);
+  //   });
+
+  //   if (validFiles.length === 0) return;
+
+  //   const newImages = [...previewImages];
+
+  //   validFiles.forEach((file) => {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       const base64String = reader.result as string;
+  //       newImages.push({ url: base64String, file });
+  //       setPreviewImages([...newImages]);
+
+  //       // Generate HTTP URLs for backend
+  //       const httpUrls = newImages.map(
+  //         (_, idx) =>
+  //           `https://picsum.photos/800/600?random=${Date.now()}-${idx}`,
+  //       );
+
+  //       updateField("pictures", httpUrls);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   });
+  // };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
+  
     const validFiles: File[] = [];
     const maxSize = 10 * 1024 * 1024;
-
+  
     Array.from(files).forEach((file) => {
       if (file.size > maxSize) {
         toast.error(`File "${file.name}" exceeds the 10MB limit`);
         return;
       }
-
+  
       if (!file.type.startsWith("image/")) {
         toast.error(`File "${file.name}" is not an image`);
         return;
       }
-
+  
       validFiles.push(file);
     });
-
+  
     if (validFiles.length === 0) return;
-
+  
     const newImages = [...previewImages];
-
+  
     validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         newImages.push({ url: base64String, file });
         setPreviewImages([...newImages]);
-
-        // Generate HTTP URLs for backend
-        const httpUrls = newImages.map(
-          (_, idx) =>
-            `https://picsum.photos/800/600?random=${Date.now()}-${idx}`,
-        );
-
-        updateField("pictures", httpUrls);
+  
+        // Отправляем массив base64 строк
+        const base64Images = newImages.map(img => img.url);
+        updateField("pictures", base64Images);
       };
       reader.readAsDataURL(file);
     });
   };
 
+  // const handleRemoveImage = (index: number) => {
+  //   const newImages = [...previewImages];
+  //   newImages.splice(index, 1);
+  //   setPreviewImages(newImages);
+
+  //   // Generate HTTP URLs for backend
+  //   const httpUrls = newImages.map(
+  //     (_, idx) => `https://picsum.photos/800/600?random=${Date.now()}-${idx}`,
+  //   );
+
+  //   updateField("pictures", httpUrls);
+
+  //   if (currentImageIndex >= newImages.length && newImages.length > 0) {
+  //     setCurrentImageIndex(newImages.length - 1);
+  //   } else if (newImages.length === 0) {
+  //     setCurrentImageIndex(0);
+  //   }
+  // };
+
+  // Добавление утилиты
+  
   const handleRemoveImage = (index: number) => {
     const newImages = [...previewImages];
     newImages.splice(index, 1);
     setPreviewImages(newImages);
-
-    // Generate HTTP URLs for backend
-    const httpUrls = newImages.map(
-      (_, idx) => `https://picsum.photos/800/600?random=${Date.now()}-${idx}`,
-    );
-
-    updateField("pictures", httpUrls);
-
+  
+    // Отправляем массив base64 строк
+    const base64Images = newImages.map(img => img.url);
+    updateField("pictures", base64Images);
+  
     if (currentImageIndex >= newImages.length && newImages.length > 0) {
       setCurrentImageIndex(newImages.length - 1);
     } else if (newImages.length === 0) {
       setCurrentImageIndex(0);
     }
   };
-
-  // Добавление утилиты
+  
   const handleAddUtility = () => {
     if (!newUtilityItem.trim()) return;
 

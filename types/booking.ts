@@ -1,4 +1,3 @@
-// types/booking.ts
 export interface BookingRequest {
   id: string;
   room: string;
@@ -17,7 +16,7 @@ export interface BookingRequest {
   status: "pending" | "accepted" | "rejected" | "waiting";
   checkInDate: string;
   checkOutDate: string;
-  duration: number; // in months
+  duration: number;
   message?: string;
 }
 
@@ -80,7 +79,6 @@ export interface BookingRequestDetails extends BookingRequest {
   };
 }
 
-// data/fakeBookingRequests.ts
 export const fakeBookingRequests: BookingRequest[] = [
   {
     id: "1",

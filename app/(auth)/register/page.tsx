@@ -127,7 +127,7 @@ export default function RegisterPage() {
       }
       toast.success("Welcome!");
 
-      router.push("/");
+      router.push("/login");
     } catch (err: any) {
       toast.error(err.message);
     } finally {

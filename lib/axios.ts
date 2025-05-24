@@ -27,4 +27,6 @@ function createApiClient(baseURL: string): AxiosInstance {
   return instance;
 }
 
-export const api = createApiClient("https://diploma-project-backend.fly.dev");
+// export const api = createApiClient("https://diploma-project-backend.fly.dev");
+
+export const api = createApiClient("https://diploma-rest-api.onrender.com");

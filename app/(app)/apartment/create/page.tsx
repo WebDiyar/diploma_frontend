@@ -236,22 +236,14 @@ export default function CreateApartmentPage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        // Сохраняем base64 для предпросмотра, но будем отправлять HTTP URL
         newImages.push({ url: base64String, file });
         setPreviewImages([...newImages]);
 
-        // Генерируем HTTP URL для отправки на бэкенд
-        const httpUrls = newImages.map(
-          (_, idx) =>
-            `https://picsum.photos/800/600?random=${Date.now()}-${idx}`,
-        );
-
         setApartmentData({
           ...apartmentData,
-          pictures: httpUrls, // HTTP URL-адреса для бэкенда
+          pictures: newImages.map(img => img.url), // base64 строки
         });
 
-        // Clear validation error for photos if any
         if (validationErrors["pictures"]) {
           setValidationErrors({
             ...validationErrors,
@@ -268,15 +260,10 @@ export default function CreateApartmentPage() {
     const newImages = [...previewImages];
     newImages.splice(index, 1);
     setPreviewImages(newImages);
-
-    // Генерируем новые HTTP URL
-    const httpUrls = newImages.map(
-      (_, idx) => `https://picsum.photos/800/600?random=${Date.now()}-${idx}`,
-    );
-
+  
     setApartmentData({
       ...apartmentData,
-      pictures: httpUrls,
+      pictures: newImages.map(img => img.url),
     });
 
     // Check if we need to set validation error for photos
@@ -502,6 +489,7 @@ export default function CreateApartmentPage() {
   //     setIsSubmitting(false);
   //   }
   // };
+
   const handleSubmit = async () => {
     // Проверка всех вкладок перед отправкой
     let isValid = true;
@@ -527,18 +515,14 @@ export default function CreateApartmentPage() {
     setIsSubmitting(true);
 
     try {
-      // Создаем HTTP URL-адреса вместо base64
-      const httpImageUrls = previewImages.map(
-        (_, index) =>
-          `https://picsum.photos/800/600?random=${Date.now()}-${index}`,
-      );
+      const base64Images = previewImages.map(image => image.url);
 
       // Создаем данные для отправки
       const currentDate = new Date().toISOString();
       const submitData = {
         ...apartmentData,
         ownerId: profile?.userId,
-        pictures: httpImageUrls, // HTTP URL-адреса
+        pictures: base64Images,
         created_at: currentDate,
         updated_at: currentDate,
       };

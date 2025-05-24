@@ -100,20 +100,22 @@ const formatDate = (dateString: string) => {
 
 // Функция для преобразования base64 или URL в рабочий URL для изображения
 const getImageUrl = (url: string) => {
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  // Если это base64 строка - используем как есть
+  if (url?.startsWith("data:image")) {
+    return url;
+  }
+
+  // Если это HTTP URL и не содержит example.com - используем как есть
+  if (url?.startsWith("http://") || url?.startsWith("https://")) {
     if (url.includes("example.com")) {
       return `https://source.unsplash.com/random/800x600/?apartment&sig=${Math.random()}`;
     }
     return url;
   }
 
-  if (url.startsWith("data:image")) {
-    return url;
-  }
-
+  // Fallback для плейсхолдера
   return "https://source.unsplash.com/random/800x600/?apartment";
 };
-
 // Типы для сортировки и фильтрации
 type SortField =
   | "name"

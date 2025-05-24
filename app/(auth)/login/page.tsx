@@ -94,7 +94,7 @@ export default function LoginPage() {
       }
 
       toast.success("Logged in successfully");
-      router.push("/");
+      router.push("/profile");
     } catch (error: any) {
       setErrorMessage(error.message || "Login failed");
       toast.error(error.message || "Login failed");

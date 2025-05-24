@@ -80,7 +80,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { fakeBookingRequests } from "@/types/booking";
 
-// Types for booking requests
 interface BookingRequest {
   id: string;
   room: string;
@@ -99,13 +98,12 @@ interface BookingRequest {
   status: "pending" | "accepted" | "rejected" | "waiting";
   checkInDate: string;
   checkOutDate: string;
-  duration: number; // in months
+  duration: number;
   message?: string;
 }
 
 // Utility functions - Fixed hydration issue
 const formatPrice = (price: number): string => {
-  // Use consistent formatting to avoid hydration issues
   return price.toLocaleString("en-US") + " KZT";
 };
 
