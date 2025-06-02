@@ -227,16 +227,15 @@ export default function ApartmentDetailPage() {
     try {
       const fullData = getFullApartmentData();
 
-    // Отправляем base64 строки как есть
-    const base64Images = previewImages.map(img => img.url);
+      // Отправляем base64 строки как есть
+      const base64Images = previewImages.map((img) => img.url);
 
-    const dataToSend = {
-      ...fullData,
-      apartmentId: apartmentId,
-      ownerId: fullData.ownerId || apartmentData?.ownerId || "",
-      pictures: base64Images, // массив base64 строк
-    };
-
+      const dataToSend = {
+        ...fullData,
+        apartmentId: apartmentId,
+        ownerId: fullData.ownerId || apartmentData?.ownerId || "",
+        pictures: base64Images, // массив base64 строк
+      };
 
       console.log("Sending data to API:", dataToSend);
 
@@ -298,37 +297,37 @@ export default function ApartmentDetailPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-  
+
     const validFiles: File[] = [];
     const maxSize = 10 * 1024 * 1024;
-  
+
     Array.from(files).forEach((file) => {
       if (file.size > maxSize) {
         toast.error(`File "${file.name}" exceeds the 10MB limit`);
         return;
       }
-  
+
       if (!file.type.startsWith("image/")) {
         toast.error(`File "${file.name}" is not an image`);
         return;
       }
-  
+
       validFiles.push(file);
     });
-  
+
     if (validFiles.length === 0) return;
-  
+
     const newImages = [...previewImages];
-  
+
     validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         newImages.push({ url: base64String, file });
         setPreviewImages([...newImages]);
-  
+
         // Отправляем массив base64 строк
-        const base64Images = newImages.map(img => img.url);
+        const base64Images = newImages.map((img) => img.url);
         updateField("pictures", base64Images);
       };
       reader.readAsDataURL(file);
@@ -355,23 +354,23 @@ export default function ApartmentDetailPage() {
   // };
 
   // Добавление утилиты
-  
+
   const handleRemoveImage = (index: number) => {
     const newImages = [...previewImages];
     newImages.splice(index, 1);
     setPreviewImages(newImages);
-  
+
     // Отправляем массив base64 строк
-    const base64Images = newImages.map(img => img.url);
+    const base64Images = newImages.map((img) => img.url);
     updateField("pictures", base64Images);
-  
+
     if (currentImageIndex >= newImages.length && newImages.length > 0) {
       setCurrentImageIndex(newImages.length - 1);
     } else if (newImages.length === 0) {
       setCurrentImageIndex(0);
     }
   };
-  
+
   const handleAddUtility = () => {
     if (!newUtilityItem.trim()) return;
 

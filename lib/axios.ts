@@ -1,7 +1,6 @@
 import axios from "axios";
 import { AxiosInstance } from "axios";
 import Cookies from "js-cookie";
-import { useSession } from "next-auth/react";
 
 function createApiClient(baseURL: string): AxiosInstance {
   const instance = axios.create({

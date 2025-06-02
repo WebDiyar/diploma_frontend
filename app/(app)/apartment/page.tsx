@@ -122,7 +122,8 @@ type SortField =
   | "price"
   | "created_at"
   | "available_from"
-  | "district_name";
+  | "district_name"
+  | "university_nearby";
 type SortOrder = "asc" | "desc";
 type ViewMode = "table" | "grid";
 type StatusFilter = "all" | "active" | "inactive" | "promoted";
@@ -147,12 +148,6 @@ const StatsCard = ({
         <div className="space-y-2">
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {trend && (
-            <p className="text-xs text-gray-500 flex items-center">
-              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-              {trend}
-            </p>
-          )}
         </div>
         <div className={`p-3 rounded-xl ${color}`}>
           <Icon className="h-6 w-6 text-white" />
@@ -279,11 +274,11 @@ const ApartmentTableRow = ({
             className="font-semibold text-gray-900 truncate max-w-48"
             title={apartment.apartment_name}
           >
-            {apartment.apartment_name}
+            {apartment.apartment_name || "Untitled Apartment"}
           </span>
           <span className="text-sm text-gray-500 flex items-center">
             <MapPin className="h-3 w-3 mr-1" />
-            {apartment.district_name}
+            {`${apartment.district_name} district` || "Unknown District"}
           </span>
         </div>
       </TableCell>
@@ -309,7 +304,7 @@ const ApartmentTableRow = ({
       </TableCell>
       <TableCell className="py-4">
         <span className="text-gray-700 font-medium">
-          {apartment.district_name}
+        {apartment.university_nearby || "Not specified"}
         </span>
       </TableCell>
       <TableCell className="py-4">
@@ -319,20 +314,20 @@ const ApartmentTableRow = ({
       </TableCell>
       <TableCell className="py-4">
         <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
-          {formatPrice(apartment.price_per_month)}
+          {formatPrice(apartment.price_per_month) || "N/A"}
         </span>
       </TableCell>
-      <TableCell className="py-4">
+      {/* <TableCell className="py-4">
         <span className="text-gray-600 font-mono text-xs bg-gray-100 px-2 py-1 rounded">
           #{apartment.apartmentId?.toString().slice(-4) || "N/A"}
         </span>
-      </TableCell>
+      </TableCell> */}
       <TableCell className="py-4">
         <span
           className="text-gray-600 truncate max-w-32"
           title={apartment.address.street}
         >
-          {apartment.address.street}
+          {apartment.address.street  || "No Street Address"}
         </span>
       </TableCell>
       <TableCell className="py-4">
@@ -346,7 +341,7 @@ const ApartmentTableRow = ({
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 bg-white ">
             <DropdownMenuItem
               onClick={handleViewDetails}
               className="cursor-pointer"
@@ -358,7 +353,7 @@ const ApartmentTableRow = ({
               <Edit className="h-4 w-4 mr-2" />
               Edit Apartment
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {/* <DropdownMenuSeparator /> */}
             <DropdownMenuItem
               onClick={handleDelete}
               disabled={isDeleting}
@@ -687,9 +682,9 @@ export default function MyApartmentsPage() {
   const ownerId = profile?.userId;
 
   // Состояния для управления UI
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortField, setSortField] = useState<SortField>("created_at");
@@ -724,6 +719,9 @@ export default function MyApartmentsPage() {
     },
   });
 
+  useEffect(() => {
+    console.log("Apartments data:", apartments);
+  }, [apartments])
   // Фильтрация и сортировка апартаментов
   const filteredAndSortedApartments = apartments
     ? apartments
@@ -737,7 +735,10 @@ export default function MyApartmentsPage() {
               .includes(searchQuery.toLowerCase()) ||
             apartment.district_name
               .toLowerCase()
-              .includes(searchQuery.toLowerCase());
+              .includes(searchQuery.toLowerCase()) ||
+              (apartment.university_nearby || "")
+    .toLowerCase()
+    .includes(searchQuery.toLowerCase());;
 
           let matchesStatus = true;
           if (statusFilter === "active") matchesStatus = apartment.is_active;
@@ -772,6 +773,10 @@ export default function MyApartmentsPage() {
               aValue = a.district_name.toLowerCase();
               bValue = b.district_name.toLowerCase();
               break;
+             case "university_nearby":
+                aValue = (a.university_nearby || "").toLowerCase();
+                bValue = (b.university_nearby || "").toLowerCase();
+                break;
             default:
               return 0;
           }
@@ -892,21 +897,18 @@ export default function MyApartmentsPage() {
               icon={Activity}
               title="Active Listings"
               value={stats.active}
-              trend="+8% this week"
               color="bg-gradient-to-r from-green-500 to-green-600"
             />
             <StatsCard
               icon={Star}
               title="Featured"
               value={stats.featured}
-              trend="2 promoted"
               color="bg-gradient-to-r from-amber-500 to-orange-500"
             />
             <StatsCard
               icon={DollarSign}
               title="Avg. Price"
               value={formatPrice(stats.avgPrice)}
-              trend="Market rate"
               color="bg-gradient-to-r from-purple-500 to-purple-600"
             />
           </div>
@@ -939,7 +941,7 @@ export default function MyApartmentsPage() {
                     <SelectTrigger className="w-full sm:w-40 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11">
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active Only</SelectItem>
                       <SelectItem value="inactive">Inactive Only</SelectItem>
@@ -954,11 +956,11 @@ export default function MyApartmentsPage() {
                     <SelectTrigger className="w-full sm:w-32 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="6">6 per page</SelectItem>
-                      <SelectItem value="12">12 per page</SelectItem>
-                      <SelectItem value="24">24 per page</SelectItem>
-                      <SelectItem value="48">48 per page</SelectItem>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="5">5 per page</SelectItem>
+                      <SelectItem value="10">10 per page</SelectItem>
+                      <SelectItem value="25">25 per page</SelectItem>
+                      <SelectItem value="50">50 per page</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -977,7 +979,7 @@ export default function MyApartmentsPage() {
                   <SelectTrigger className="w-40 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="created_at-desc">
                       Newest First
                     </SelectItem>
@@ -991,20 +993,20 @@ export default function MyApartmentsPage() {
 
                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
                   <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                    className={`h-9 px-3 ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                  <Button
                     variant={viewMode === "table" ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("table")}
                     className={`h-9 px-3 ${viewMode === "table" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
                   >
                     <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className={`h-9 px-3 ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -1065,17 +1067,18 @@ export default function MyApartmentsPage() {
                             Status
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700">
-                            Location
+                            University Nearby
                           </TableHead>
+                          
                           <TableHead className="font-semibold text-gray-700">
                             Published
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700">
                             Price
                           </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
+                          {/* <TableHead className="font-semibold text-gray-700">
                             ID
-                          </TableHead>
+                          </TableHead> */}
                           <TableHead className="font-semibold text-gray-700">
                             Address
                           </TableHead>
@@ -1218,14 +1221,14 @@ export default function MyApartmentsPage() {
                               Status
                             </TableHead>
                             <TableHead
-                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
-                              onClick={() => handleSort("district_name")}
-                            >
-                              <div className="flex items-center space-x-1">
-                                <span>Location</span>
-                                {getSortIcon("district_name")}
-                              </div>
-                            </TableHead>
+  className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
+  onClick={() => handleSort("university_nearby")}
+>
+  <div className="flex items-center space-x-1">
+    <span>University Nearby</span>
+    {getSortIcon("university_nearby")}
+  </div>
+</TableHead>
                             <TableHead
                               className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
                               onClick={() => handleSort("created_at")}
@@ -1244,9 +1247,9 @@ export default function MyApartmentsPage() {
                                 {getSortIcon("price")}
                               </div>
                             </TableHead>
-                            <TableHead className="font-semibold text-gray-700">
+                            {/* <TableHead className="font-semibold text-gray-700">
                               ID
-                            </TableHead>
+                            </TableHead> */}
                             <TableHead className="font-semibold text-gray-700">
                               Address
                             </TableHead>

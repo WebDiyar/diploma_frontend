@@ -232,7 +232,7 @@ export default function LoginPage() {
                           </FormItem>
                         )}
                       />
-
+                      {/* 
                       <div className="flex">
                         <Link
                           href="/forgot-password"
@@ -240,7 +240,7 @@ export default function LoginPage() {
                         >
                           Forgot password?
                         </Link>
-                      </div>
+                      </div> */}
                     </div>
 
                     <Button

@@ -46,6 +46,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo Section */}
           <div className="flex-shrink-0">
+            {/* <div className="bg-red-400 h-[50px] w-[140px]"></div> */}
             <Link href="/">
               <Image
                 src="/nav/aitu_logo.png"
@@ -54,7 +55,7 @@ export default function Navbar() {
                 height={55}
                 className="h-auto w-auto sm:w-[150px] md:w-[160px] lg:w-[170px] object-contain"
               />
-            </Link>
+            </Link> 
           </div>
 
           {/* Desktop Navigation Links */}
@@ -66,10 +67,22 @@ export default function Navbar() {
               Home
             </Link>
             <Link
+              href="/apartments"
+              className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
+            >
+              All Apartments
+            </Link>
+            <Link
               href="/apartment"
               className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
             >
               My Apartments
+            </Link>
+            <Link
+              href="/booking"
+              className="text-gray-600 hover:text-gray-900 text-sm lg:text-base transition-colors"
+            >
+              Bookings
             </Link>
             <Link
               href="/profile"
@@ -89,19 +102,13 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
             {session?.rawToken ? (
               <>
-                <Button
-                  onClick={handleLogOut}
-                  className="text-white bg-red-600 hover:bg-red-700"
-                >
-                  Log out
-                </Button>
                 <span
-                  className="underline cursor-pointer "
+                  className="cursor-pointer "
                   onClick={() => {
                     router.push("/profile");
                   }}
                 >
-                  {session?.user.name}
+                  <span className="underline">Name:</span> {session?.user.name}
                 </span>
               </>
             ) : (
@@ -113,30 +120,13 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Language selector icon */}
-            <div className="text-gray-600 cursor-pointer">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-                />
-              </svg>
-            </div>
 
-            <Link
-              href="/rent-a-room"
-              className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-3 lg:px-4 text-sm lg:text-base border border-gray-400 rounded shadow transition-colors"
-            >
-              Rent a Room
-            </Link>
+            <Button
+                  onClick={handleLogOut}
+                  className="text-white bg-red-600 hover:bg-red-700"
+                >
+                  Log out
+                </Button>
           </div>
 
           {/* Mobile menu button */}
@@ -234,13 +224,12 @@ export default function Navbar() {
                   <span>Language</span>
                 </div>
 
-                <Link
-                  href="/landloads"
-                  className="block w-full text-center bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-                  onClick={() => setIsMenuOpen(false)}
+                <Button
+                  onClick={handleLogOut}
+                  className="text-white bg-red-600 hover:bg-red-700"
                 >
-                  Rent a Room
-                </Link>
+                  Log out
+                </Button>
               </div>
             </div>
           </div>

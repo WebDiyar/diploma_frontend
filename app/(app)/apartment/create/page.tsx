@@ -241,7 +241,7 @@ export default function CreateApartmentPage() {
 
         setApartmentData({
           ...apartmentData,
-          pictures: newImages.map(img => img.url), // base64 строки
+          pictures: newImages.map((img) => img.url), // base64 строки
         });
 
         if (validationErrors["pictures"]) {
@@ -260,10 +260,10 @@ export default function CreateApartmentPage() {
     const newImages = [...previewImages];
     newImages.splice(index, 1);
     setPreviewImages(newImages);
-  
+
     setApartmentData({
       ...apartmentData,
-      pictures: newImages.map(img => img.url),
+      pictures: newImages.map((img) => img.url),
     });
 
     // Check if we need to set validation error for photos
@@ -515,7 +515,7 @@ export default function CreateApartmentPage() {
     setIsSubmitting(true);
 
     try {
-      const base64Images = previewImages.map(image => image.url);
+      const base64Images = previewImages.map((image) => image.url);
 
       // Создаем данные для отправки
       const currentDate = new Date().toISOString();

@@ -418,8 +418,6 @@
 //   );
 // }
 
-
-
 // "use client";
 // import { useEffect, useState } from "react";
 // import { useRouter } from "next/navigation";
@@ -519,11 +517,11 @@
 //       payment_status: 'pending',
 //     }),
 //   });
-  
+
 //   if (!response.ok) {
 //     throw new Error('Failed to create booking');
 //   }
-  
+
 //   return response.json();
 // };
 
@@ -584,11 +582,11 @@
 // );
 
 // // Компонент для просмотра деталей апартамента
-// const ApartmentDetailsModal = ({ 
-//   apartment, 
-//   isOpen, 
-//   onClose 
-// }: { 
+// const ApartmentDetailsModal = ({
+//   apartment,
+//   isOpen,
+//   onClose
+// }: {
 //   apartment: Apartment | null;
 //   isOpen: boolean;
 //   onClose: () => void;
@@ -612,7 +610,7 @@
 //     const {
 //       profile,
 //     } = useProfileStore();
-    
+
 //   const handleBooking = async () => {
 //     if (!bookingData.message.trim() || !bookingData.check_in_date || !bookingData.check_out_date) {
 //       toast.error("Please fill in all booking details");
@@ -630,7 +628,7 @@
 //         check_in_date: bookingData.check_in_date,
 //         check_out_date: bookingData.check_out_date,
 //       });
-      
+
 //       toast.success("🎉 Booking request sent successfully!");
 //       setIsBookingOpen(false);
 //       setBookingData({ message: "", check_in_date: "", check_out_date: "" });
@@ -671,7 +669,7 @@
 //                     alt={`Property image ${currentImageIndex + 1}`}
 //                     className="w-full h-full object-cover"
 //                   />
-                  
+
 //                   {/* Status badges */}
 //                   <div className="absolute top-4 left-4 flex gap-2">
 //                     {currentApartment.is_promoted && (
@@ -1472,7 +1470,7 @@
 //   // Компонент пагинации
 //   const Pagination = () => {
 //     const totalPages = Math.ceil((apartments?.length || 0) / itemsPerPage);
-    
+
 //     if (totalPages <= 1) return null;
 
 //     return (
@@ -1573,8 +1571,8 @@
 //                 )}
 //               </div>
 
-//               <Badge 
-//                 variant="outline" 
+//               <Badge
+//                 variant="outline"
 //                 className="w-fit text-blue-600 bg-blue-50 border-blue-200 px-4 py-2"
 //               >
 //                 {activeSearchType === "nearby" && "📍 Location-based search"}
@@ -1684,7 +1682,7 @@
 //                   Ready to Find Your Dream Home?
 //                 </h3>
 //                 <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-//                   Use the advanced filters above to search for apartments that match your preferences, 
+//                   Use the advanced filters above to search for apartments that match your preferences,
 //                   or start by browsing our featured listings.
 //                 </p>
 //                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -1718,7 +1716,6 @@
 //     </div>
 //   );
 // }
-
 
 "use client";
 import { useEffect, useState } from "react";
@@ -1808,22 +1805,25 @@ const createBooking = async (bookingData: {
   check_in_date: string;
   check_out_date: string;
 }) => {
-  const response = await fetch('https://diploma-rest-api.onrender.com/api/v1/bookings', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
+  const response = await fetch(
+    "https://diploma-rest-api.onrender.com/api/v1/bookings",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...bookingData,
+        status: "pending",
+        payment_status: "pending",
+      }),
     },
-    body: JSON.stringify({
-      ...bookingData,
-      status: 'pending',
-      payment_status: 'pending',
-    }),
-  });
-  
+  );
+
   if (!response.ok) {
-    throw new Error('Failed to create booking');
+    throw new Error("Failed to create booking");
   }
-  
+
   return response.json();
 };
 
@@ -1884,11 +1884,11 @@ const ApartmentCardSkeleton = () => (
 );
 
 // Компонент для просмотра деталей апартамента
-const ApartmentDetailsModal = ({ 
-  apartment, 
-  isOpen, 
-  onClose 
-}: { 
+const ApartmentDetailsModal = ({
+  apartment,
+  isOpen,
+  onClose,
+}: {
   apartment: Apartment | null;
   isOpen: boolean;
   onClose: () => void;
@@ -1904,17 +1904,19 @@ const ApartmentDetailsModal = ({
 
   const { data: apartmentDetails, isLoading } = useApartment(
     apartment?.apartmentId || "",
-    { enabled: !!apartment }
+    { enabled: !!apartment },
   );
 
   const currentApartment = apartmentDetails || apartment;
 
-    const {
-      profile,
-    } = useProfileStore();
-    
+  const { profile } = useProfileStore();
+
   const handleBooking = async () => {
-    if (!bookingData.message.trim() || !bookingData.check_in_date || !bookingData.check_out_date) {
+    if (
+      !bookingData.message.trim() ||
+      !bookingData.check_in_date ||
+      !bookingData.check_out_date
+    ) {
       toast.error("Please fill in all booking details");
       return;
     }
@@ -1924,13 +1926,15 @@ const ApartmentDetailsModal = ({
     setIsBooking(true);
     try {
       await createBooking({
-        apartmentId: currentApartment?.apartmentId ? currentApartment.apartmentId : "",
+        apartmentId: currentApartment?.apartmentId
+          ? currentApartment.apartmentId
+          : "",
         userId: profile?.userId ? profile.userId : "",
         message: bookingData.message,
         check_in_date: bookingData.check_in_date,
         check_out_date: bookingData.check_out_date,
       });
-      
+
       toast.success("🎉 Booking request sent successfully!");
       setIsBookingOpen(false);
       setBookingData({ message: "", check_in_date: "", check_out_date: "" });
@@ -1963,94 +1967,104 @@ const ApartmentDetailsModal = ({
         ) : (
           <div className="space-y-6">
             {/* Image Gallery */}
-            {currentApartment.pictures && currentApartment.pictures.length > 0 && (
-              <div className="space-y-4">
-                <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden">
-                  <img
-                    src={getImageUrl(currentApartment.pictures[currentImageIndex])}
-                    alt={`Property image ${currentImageIndex + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  
-                  {/* Status badges */}
-                  <div className="absolute top-4 left-4 flex gap-2">
-                    {currentApartment.is_promoted && (
-                      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
-                        <Star className="h-3 w-3 mr-1" />
-                        Featured
+            {currentApartment.pictures &&
+              currentApartment.pictures.length > 0 && (
+                <div className="space-y-4">
+                  <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden">
+                    <img
+                      src={getImageUrl(
+                        currentApartment.pictures[currentImageIndex],
+                      )}
+                      alt={`Property image ${currentImageIndex + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Status badges */}
+                    <div className="absolute top-4 left-4 flex gap-2">
+                      {currentApartment.is_promoted && (
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
+                          <Star className="h-3 w-3 mr-1" />
+                          Featured
+                        </Badge>
+                      )}
+                      <Badge
+                        className={`shadow-lg border-0 ${
+                          currentApartment.is_active
+                            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                            : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"
+                        }`}
+                      >
+                        {currentApartment.is_active ? "Active" : "Inactive"}
                       </Badge>
+                    </div>
+
+                    {/* Navigation arrows */}
+                    {currentApartment.pictures.length > 1 && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0"
+                          onClick={() =>
+                            setCurrentImageIndex((prev) =>
+                              prev === 0
+                                ? currentApartment.pictures.length - 1
+                                : prev - 1,
+                            )
+                          }
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0"
+                          onClick={() =>
+                            setCurrentImageIndex((prev) =>
+                              prev === currentApartment.pictures.length - 1
+                                ? 0
+                                : prev + 1,
+                            )
+                          }
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </Button>
+                      </>
                     )}
-                    <Badge className={`shadow-lg border-0 ${
-                      currentApartment.is_active
-                        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
-                        : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"
-                    }`}>
-                      {currentApartment.is_active ? "Active" : "Inactive"}
-                    </Badge>
+
+                    {/* Image counter */}
+                    {currentApartment.pictures.length > 1 && (
+                      <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
+                        {currentImageIndex + 1} /{" "}
+                        {currentApartment.pictures.length}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Navigation arrows */}
+                  {/* Thumbnail gallery */}
                   {currentApartment.pictures.length > 1 && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0"
-                        onClick={() =>
-                          setCurrentImageIndex(prev =>
-                            prev === 0 ? currentApartment.pictures.length - 1 : prev - 1
-                          )
-                        }
-                      >
-                        <ChevronLeft className="h-5 w-5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0"
-                        onClick={() =>
-                          setCurrentImageIndex(prev =>
-                            prev === currentApartment.pictures.length - 1 ? 0 : prev + 1
-                          )
-                        }
-                      >
-                        <ChevronRight className="h-5 w-5" />
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Image counter */}
-                  {currentApartment.pictures.length > 1 && (
-                    <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
-                      {currentImageIndex + 1} / {currentApartment.pictures.length}
+                    <div className="flex gap-3 overflow-x-auto pb-2">
+                      {currentApartment.pictures.map((image, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                            currentImageIndex === index
+                              ? "border-blue-500 shadow-lg scale-105"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <img
+                            src={getImageUrl(image)}
+                            alt={`Thumbnail ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
-
-                {/* Thumbnail gallery */}
-                {currentApartment.pictures.length > 1 && (
-                  <div className="flex gap-3 overflow-x-auto pb-2">
-                    {currentApartment.pictures.map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                          currentImageIndex === index
-                            ? "border-blue-500 shadow-lg scale-105"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <img
-                          src={getImageUrl(image)}
-                          alt={`Thumbnail ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+              )}
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -2063,24 +2077,32 @@ const ApartmentDetailsModal = ({
               </div>
               <div className="bg-blue-50 rounded-xl p-4 text-center">
                 <Ruler className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-blue-700">{currentApartment.area} m²</p>
+                <p className="text-2xl font-bold text-blue-700">
+                  {currentApartment.area} m²
+                </p>
                 <p className="text-sm text-blue-600">total area</p>
               </div>
               <div className="bg-purple-50 rounded-xl p-4 text-center">
                 <Home className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-purple-700">{currentApartment.number_of_rooms}</p>
+                <p className="text-2xl font-bold text-purple-700">
+                  {currentApartment.number_of_rooms}
+                </p>
                 <p className="text-sm text-purple-600">rooms</p>
               </div>
               <div className="bg-amber-50 rounded-xl p-4 text-center">
                 <Users className="h-6 w-6 text-amber-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-amber-700">{currentApartment.max_users}</p>
+                <p className="text-2xl font-bold text-amber-700">
+                  {currentApartment.max_users}
+                </p>
                 <p className="text-sm text-amber-600">max occupancy</p>
               </div>
             </div>
 
             {/* Description */}
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-gray-800">Description</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Description
+              </h3>
               <p className="text-gray-600 leading-relaxed">
                 {currentApartment.description || "No description provided"}
               </p>
@@ -2093,13 +2115,24 @@ const ApartmentDetailsModal = ({
                 Location & Address
               </h3>
               <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                <p><strong>District:</strong> {currentApartment.district_name}</p>
-                <p><strong>Street:</strong> {currentApartment.address.street}, {currentApartment.address.house_number}</p>
+                <p>
+                  <strong>District:</strong> {currentApartment.district_name}
+                </p>
+                <p>
+                  <strong>Street:</strong> {currentApartment.address.street},{" "}
+                  {currentApartment.address.house_number}
+                </p>
                 {currentApartment.address.apartment_number && (
-                  <p><strong>Apartment:</strong> {currentApartment.address.apartment_number}</p>
+                  <p>
+                    <strong>Apartment:</strong>{" "}
+                    {currentApartment.address.apartment_number}
+                  </p>
                 )}
                 {currentApartment.university_nearby && (
-                  <p><strong>Near University:</strong> {currentApartment.university_nearby}</p>
+                  <p>
+                    <strong>Near University:</strong>{" "}
+                    {currentApartment.university_nearby}
+                  </p>
                 )}
               </div>
             </div>
@@ -2114,12 +2147,17 @@ const ApartmentDetailsModal = ({
                 </h3>
                 {currentApartment.included_utilities?.length > 0 ? (
                   <div className="space-y-2">
-                    {currentApartment.included_utilities.map((utility, index) => (
-                      <div key={index} className="flex items-center bg-blue-50 p-3 rounded-lg">
-                        <CheckCircle className="h-4 w-4 text-blue-500 mr-2" />
-                        <span className="text-gray-800">{utility}</span>
-                      </div>
-                    ))}
+                    {currentApartment.included_utilities.map(
+                      (utility, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center bg-blue-50 p-3 rounded-lg"
+                        >
+                          <CheckCircle className="h-4 w-4 text-blue-500 mr-2" />
+                          <span className="text-gray-800">{utility}</span>
+                        </div>
+                      ),
+                    )}
                   </div>
                 ) : (
                   <p className="text-gray-500">No utilities specified</p>
@@ -2135,7 +2173,10 @@ const ApartmentDetailsModal = ({
                 {currentApartment.rules?.length > 0 ? (
                   <div className="space-y-2">
                     {currentApartment.rules.map((rule, index) => (
-                      <div key={index} className="flex items-center bg-red-50 p-3 rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-center bg-red-50 p-3 rounded-lg"
+                      >
                         <Shield className="h-4 w-4 text-red-500 mr-2" />
                         <span className="text-gray-800">{rule}</span>
                       </div>
@@ -2149,18 +2190,24 @@ const ApartmentDetailsModal = ({
 
             {/* Contact Info */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Contact Information
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {currentApartment.contact_phone && (
                   <div className="flex items-center">
                     <Phone className="h-5 w-5 text-blue-600 mr-3" />
-                    <span className="text-gray-700">{currentApartment.contact_phone}</span>
+                    <span className="text-gray-700">
+                      {currentApartment.contact_phone}
+                    </span>
                   </div>
                 )}
                 {currentApartment.contact_telegram && (
                   <div className="flex items-center">
                     <MessageCircle className="h-5 w-5 text-blue-600 mr-3" />
-                    <span className="text-gray-700">{currentApartment.contact_telegram}</span>
+                    <span className="text-gray-700">
+                      {currentApartment.contact_telegram}
+                    </span>
                   </div>
                 )}
               </div>
@@ -2171,8 +2218,12 @@ const ApartmentDetailsModal = ({
               <Separator />
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Ready to Book?</h3>
-                  <p className="text-gray-600">Send a booking request to the owner</p>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Ready to Book?
+                  </h3>
+                  <p className="text-gray-600">
+                    Send a booking request to the owner
+                  </p>
                 </div>
                 <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
                   <DialogTrigger asChild>
@@ -2196,7 +2247,10 @@ const ApartmentDetailsModal = ({
                           type="datetime-local"
                           value={bookingData.check_in_date}
                           onChange={(e) =>
-                            setBookingData({ ...bookingData, check_in_date: e.target.value })
+                            setBookingData({
+                              ...bookingData,
+                              check_in_date: e.target.value,
+                            })
                           }
                         />
                       </div>
@@ -2207,7 +2261,10 @@ const ApartmentDetailsModal = ({
                           type="datetime-local"
                           value={bookingData.check_out_date}
                           onChange={(e) =>
-                            setBookingData({ ...bookingData, check_out_date: e.target.value })
+                            setBookingData({
+                              ...bookingData,
+                              check_out_date: e.target.value,
+                            })
                           }
                         />
                       </div>
@@ -2218,14 +2275,20 @@ const ApartmentDetailsModal = ({
                           placeholder="Tell the owner about yourself and why you're interested..."
                           value={bookingData.message}
                           onChange={(e) =>
-                            setBookingData({ ...bookingData, message: e.target.value })
+                            setBookingData({
+                              ...bookingData,
+                              message: e.target.value,
+                            })
                           }
                           className="min-h-24"
                         />
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsBookingOpen(false)}>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsBookingOpen(false)}
+                      >
                         Cancel
                       </Button>
                       <Button onClick={handleBooking} disabled={isBooking}>
@@ -2251,7 +2314,9 @@ const ApartmentDetailsModal = ({
 // Компонент карточки апартамента
 const ApartmentCard = ({ apartment }: { apartment: Apartment }) => {
   const [mainImage, setMainImage] = useState<string>("");
-  const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
+  const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(
+    null,
+  );
 
   useEffect(() => {
     if (apartment.pictures && apartment.pictures.length > 0) {
@@ -2259,7 +2324,9 @@ const ApartmentCard = ({ apartment }: { apartment: Apartment }) => {
     }
   }, [apartment]);
 
-  const createdAt = apartment.created_at ? formatDate(apartment.created_at) : "Recently";
+  const createdAt = apartment.created_at
+    ? formatDate(apartment.created_at)
+    : "Recently";
 
   return (
     <>
@@ -2291,11 +2358,13 @@ const ApartmentCard = ({ apartment }: { apartment: Apartment }) => {
           </div>
 
           <div className="absolute top-3 right-3">
-            <Badge className={`${
-              apartment.is_active
-                ? "bg-green-500 hover:bg-green-600 text-white"
-                : "bg-gray-500 hover:bg-gray-600 text-white"
-            } shadow-lg border-0`}>
+            <Badge
+              className={`${
+                apartment.is_active
+                  ? "bg-green-500 hover:bg-green-600 text-white"
+                  : "bg-gray-500 hover:bg-gray-600 text-white"
+              } shadow-lg border-0`}
+            >
               {apartment.is_active ? "Active" : "Inactive"}
             </Badge>
           </div>
@@ -2309,7 +2378,10 @@ const ApartmentCard = ({ apartment }: { apartment: Apartment }) => {
         </div>
 
         <CardHeader className="pb-3">
-          <CardTitle className="text-xl font-bold text-gray-900 truncate" title={apartment.apartment_name}>
+          <CardTitle
+            className="text-xl font-bold text-gray-900 truncate"
+            title={apartment.apartment_name}
+          >
             {apartment.apartment_name}
           </CardTitle>
           <CardDescription className="flex items-center text-gray-600">
@@ -2323,7 +2395,8 @@ const ApartmentCard = ({ apartment }: { apartment: Apartment }) => {
             <div className="flex items-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
               <Home className="h-4 w-4 mr-2 text-blue-500" />
               <span className="font-medium">
-                {apartment.number_of_rooms} Room{apartment.number_of_rooms !== 1 ? "s" : ""}
+                {apartment.number_of_rooms} Room
+                {apartment.number_of_rooms !== 1 ? "s" : ""}
               </span>
             </div>
             <div className="flex items-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
@@ -2336,15 +2409,18 @@ const ApartmentCard = ({ apartment }: { apartment: Apartment }) => {
             </div>
             <div className="flex items-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
               <Calendar className="h-4 w-4 mr-2 text-orange-500" />
-              <span className="font-medium">{formatDate(apartment.available_from)}</span>
+              <span className="font-medium">
+                {formatDate(apartment.available_from)}
+              </span>
             </div>
           </div>
 
-          {apartment.university_nearby && apartment.university_nearby !== "none" && (
-            <div className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg mb-3">
-              📚 Near {apartment.university_nearby}
-            </div>
-          )}
+          {apartment.university_nearby &&
+            apartment.university_nearby !== "none" && (
+              <div className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg mb-3">
+                📚 Near {apartment.university_nearby}
+              </div>
+            )}
 
           <div className="flex items-center text-xs text-gray-500 mb-4">
             <Clock className="h-3 w-3 mr-1" />
@@ -2365,10 +2441,18 @@ const ApartmentCard = ({ apartment }: { apartment: Apartment }) => {
             </Button>
 
             <div className="flex space-x-2">
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-red-500">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-500 hover:text-red-500"
+              >
                 <Heart className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-blue-500">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-500 hover:text-blue-500"
+              >
                 <Share2 className="h-4 w-4" />
               </Button>
             </div>
@@ -2472,12 +2556,24 @@ const SearchFilters = ({
                   <SelectValue placeholder="Select university" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Astana IT University">Astana IT University (AITU)</SelectItem>
-                  <SelectItem value="Nazarbayev University">Nazarbayev University</SelectItem>
-                  <SelectItem value="Eurasian National University">Eurasian National University</SelectItem>
-                  <SelectItem value="Kazakh Agro Technical University">Kazakh Agro Technical University</SelectItem>
-                  <SelectItem value="Astana Medical University">Astana Medical University</SelectItem>
-                  <SelectItem value="Kazakh University of Economics">Kazakh University of Economics</SelectItem>
+                  <SelectItem value="Astana IT University">
+                    Astana IT University (AITU)
+                  </SelectItem>
+                  <SelectItem value="Nazarbayev University">
+                    Nazarbayev University
+                  </SelectItem>
+                  <SelectItem value="Eurasian National University">
+                    Eurasian National University
+                  </SelectItem>
+                  <SelectItem value="Kazakh Agro Technical University">
+                    Kazakh Agro Technical University
+                  </SelectItem>
+                  <SelectItem value="Astana Medical University">
+                    Astana Medical University
+                  </SelectItem>
+                  <SelectItem value="Kazakh University of Economics">
+                    Kazakh University of Economics
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -2494,7 +2590,9 @@ const SearchFilters = ({
                   <SelectValue placeholder="Select room type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="entire_apartment">Entire Apartment</SelectItem>
+                  <SelectItem value="entire_apartment">
+                    Entire Apartment
+                  </SelectItem>
                   <SelectItem value="private_room">Private Room</SelectItem>
                   <SelectItem value="shared_room">Shared Room</SelectItem>
                 </SelectContent>
@@ -2665,9 +2763,14 @@ const SearchFilters = ({
 // Основная страница поиска апартаментов
 export default function ApartmentsSearchPage() {
   const [searchParams, setSearchParams] = useState<ApartmentSearchParams>({});
-  const [nearbyParams, setNearbyParams] = useState<NearbySearchParams>({} as NearbySearchParams);
-  const [availabilityParams, setAvailabilityParams] = useState<AvailabilitySearchParams>({} as AvailabilitySearchParams);
-  const [activeSearchType, setActiveSearchType] = useState<"general" | "nearby" | "availability" | "promoted">("general");
+  const [nearbyParams, setNearbyParams] = useState<NearbySearchParams>(
+    {} as NearbySearchParams,
+  );
+  const [availabilityParams, setAvailabilityParams] =
+    useState<AvailabilitySearchParams>({} as AvailabilitySearchParams);
+  const [activeSearchType, setActiveSearchType] = useState<
+    "general" | "nearby" | "availability" | "promoted"
+  >("general");
   const [hasSearched, setHasSearched] = useState(true); // Показываем все апартаменты сразу
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -2680,8 +2783,12 @@ export default function ApartmentsSearchPage() {
     error: searchError,
     refetch: refetchSearch,
   } = useSearchApartments(
-    { ...searchParams, skip: (currentPage - 1) * itemsPerPage, limit: itemsPerPage },
-    { enabled: activeSearchType === "general" } // Всегда включен для показа всех апартаментов
+    {
+      ...searchParams,
+      skip: (currentPage - 1) * itemsPerPage,
+      limit: itemsPerPage,
+    },
+    { enabled: activeSearchType === "general" }, // Всегда включен для показа всех апартаментов
   );
 
   const {
@@ -2691,8 +2798,12 @@ export default function ApartmentsSearchPage() {
     error: nearbyError,
     refetch: refetchNearby,
   } = useNearbyApartments(
-    { ...nearbyParams, skip: (currentPage - 1) * itemsPerPage, limit: itemsPerPage },
-    { enabled: activeSearchType === "nearby" && hasSearched }
+    {
+      ...nearbyParams,
+      skip: (currentPage - 1) * itemsPerPage,
+      limit: itemsPerPage,
+    },
+    { enabled: activeSearchType === "nearby" && hasSearched },
   );
 
   const {
@@ -2702,8 +2813,12 @@ export default function ApartmentsSearchPage() {
     error: availabilityError,
     refetch: refetchAvailability,
   } = useAvailableApartments(
-    { ...availabilityParams, skip: (currentPage - 1) * itemsPerPage, limit: itemsPerPage },
-    { enabled: activeSearchType === "availability" && hasSearched }
+    {
+      ...availabilityParams,
+      skip: (currentPage - 1) * itemsPerPage,
+      limit: itemsPerPage,
+    },
+    { enabled: activeSearchType === "availability" && hasSearched },
   );
 
   const {
@@ -2714,7 +2829,7 @@ export default function ApartmentsSearchPage() {
     refetch: refetchPromoted,
   } = usePromotedApartments(
     { skip: (currentPage - 1) * itemsPerPage, limit: itemsPerPage },
-    { enabled: activeSearchType === "promoted" && hasSearched }
+    { enabled: activeSearchType === "promoted" && hasSearched },
   );
 
   const handleSearch = () => {
@@ -2772,7 +2887,7 @@ export default function ApartmentsSearchPage() {
   // Компонент пагинации
   const Pagination = () => {
     const totalPages = Math.ceil((apartments?.length || 0) / itemsPerPage);
-    
+
     if (totalPages <= 1) return null;
 
     return (
@@ -2780,7 +2895,7 @@ export default function ApartmentsSearchPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage <= 1}
           className="border-gray-200 hover:bg-gray-50"
         >
@@ -2811,7 +2926,9 @@ export default function ApartmentsSearchPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
           disabled={currentPage >= totalPages}
           className="border-gray-200 hover:bg-gray-50"
         >
@@ -2842,10 +2959,10 @@ export default function ApartmentsSearchPage() {
             Find Your Perfect Home
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover thousands of amazing apartment listings in Kazakhstan with advanced search filters
+            Discover thousands of amazing apartment listings in Kazakhstan with
+            advanced search filters
           </p>
         </header>
-
         <SearchFilters
           searchParams={searchParams}
           setSearchParams={setSearchParams}
@@ -2856,133 +2973,155 @@ export default function ApartmentsSearchPage() {
           onSearch={handleSearch}
           isLoading={isLoading}
         />
-
         {/* Search Results Section - всегда показываем */}
         <div>
           <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">
-                {hasSearched && (searchParams.location || searchParams.university || searchParams.room_type || searchParams.min_price || searchParams.max_price || nearbyParams.latitude || availabilityParams.check_in) 
-                  ? "Search Results" 
-                  : "All Available Apartments"
-                }
+                {hasSearched &&
+                (searchParams.location ||
+                  searchParams.university ||
+                  searchParams.room_type ||
+                  searchParams.min_price ||
+                  searchParams.max_price ||
+                  nearbyParams.latitude ||
+                  availabilityParams.check_in)
+                  ? "Search Results"
+                  : "All Available Apartments"}
               </h2>
               {!isLoading && apartments && (
                 <p className="text-gray-600">
-                  {apartments.length} {apartments.length === 1 ? "apartment" : "apartments"} found
+                  {apartments.length}{" "}
+                  {apartments.length === 1 ? "apartment" : "apartments"} found
                   {activeSearchType === "nearby" && " nearby"}
-                  {activeSearchType === "availability" && " available for your dates"}
+                  {activeSearchType === "availability" &&
+                    " available for your dates"}
                   {activeSearchType === "promoted" && " featured"}
                 </p>
               )}
             </div>
 
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className="w-fit text-blue-600 bg-blue-50 border-blue-200 px-4 py-2"
             >
               {activeSearchType === "nearby" && "📍 Location-based search"}
               {activeSearchType === "availability" && "📅 Availability search"}
               {activeSearchType === "promoted" && "⭐ Featured apartments"}
-              {activeSearchType === "general" && (
-                (searchParams.location || searchParams.university || searchParams.room_type || searchParams.min_price || searchParams.max_price || nearbyParams.latitude || availabilityParams.check_in)
+              {activeSearchType === "general" &&
+                (searchParams.location ||
+                searchParams.university ||
+                searchParams.room_type ||
+                searchParams.min_price ||
+                searchParams.max_price ||
+                nearbyParams.latitude ||
+                availabilityParams.check_in
                   ? "🔍 Filtered search"
-                  : "🏠 All apartments"
-              )}
+                  : "🏠 All apartments")}
             </Badge>
           </div>
 
-            {isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, index) => (
-                  <ApartmentCardSkeleton key={index} />
-                ))}
-              </div>
-            )}
+          {isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, index) => (
+                <ApartmentCardSkeleton key={index} />
+              ))}
+            </div>
+          )}
 
-            {isError && (
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-12">
-                  <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                      <Building2 className="h-8 w-8 text-red-500" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      Error Loading Results
-                    </h3>
-                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      {error?.message || "Failed to load search results. Please try again."}
-                    </p>
+          {isError && (
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-12">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                    <Building2 className="h-8 w-8 text-red-500" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    Error Loading Results
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    {error?.message ||
+                      "Failed to load search results. Please try again."}
+                  </p>
+                  <Button
+                    onClick={handleSearch}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {!isLoading && !isError && apartments && apartments.length === 0 && (
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-12">
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Search className="h-10 w-10 text-blue-500" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                    No Apartments Found
+                  </h3>
+                  <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                    Try adjusting your search criteria or browse featured
+                    apartments.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button
-                      onClick={handleSearch}
-                      className="bg-red-600 hover:bg-red-700 text-white"
+                      variant="outline"
+                      onClick={() => {
+                        setSearchParams({});
+                        setNearbyParams({} as NearbySearchParams);
+                        setAvailabilityParams({} as AvailabilitySearchParams);
+                      }}
+                      className="border-blue-300 text-blue-600 hover:bg-blue-50"
                     >
-                      Try Again
+                      Clear Filters
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setSearchParams({});
+                        setNearbyParams({} as NearbySearchParams);
+                        setAvailabilityParams({} as AvailabilitySearchParams);
+                        setActiveSearchType("promoted");
+                        handleSearch();
+                      }}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Show Featured
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {!isLoading && !isError && apartments && apartments.length === 0 && (
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-12">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Search className="h-10 w-10 text-blue-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                      No Apartments Found
-                    </h3>
-                    <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
-                      Try adjusting your search criteria or browse featured apartments.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setSearchParams({});
-                          setNearbyParams({} as NearbySearchParams);
-                          setAvailabilityParams({} as AvailabilitySearchParams);
-                        }}
-                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                      >
-                        Clear Filters
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setSearchParams({});
-                          setNearbyParams({} as NearbySearchParams);
-                          setAvailabilityParams({} as AvailabilitySearchParams);
-                          setActiveSearchType("promoted");
-                          handleSearch();
-                        }}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                      >
-                        <Star className="h-4 w-4 mr-2" />
-                        Show Featured
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {!isLoading && !isError && apartments && apartments.length > 0 && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {apartments.map((apartment) => (
-                    <ApartmentCard key={apartment.apartmentId} apartment={apartment} />
-                  ))}
                 </div>
-                <Pagination />
-              </>
-            )}
-          </div>
-        )
+              </CardContent>
+            </Card>
+          )}
 
-        {/* Welcome Section - показываем только если нет активных фильтров */}
-        {!hasSearched || (!searchParams.location && !searchParams.university && !searchParams.room_type && !searchParams.min_price && !searchParams.max_price && !nearbyParams.latitude && !availabilityParams.check_in) ? (
+          {!isLoading && !isError && apartments && apartments.length > 0 && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {apartments.map((apartment) => (
+                  <ApartmentCard
+                    key={apartment.apartmentId}
+                    apartment={apartment}
+                  />
+                ))}
+              </div>
+              <Pagination />
+            </>
+          )}
+        </div>
+        ){/* Welcome Section - показываем только если нет активных фильтров */}
+        {!hasSearched ||
+        (!searchParams.location &&
+          !searchParams.university &&
+          !searchParams.room_type &&
+          !searchParams.min_price &&
+          !searchParams.max_price &&
+          !nearbyParams.latitude &&
+          !availabilityParams.check_in) ? (
           <Card className="border-0 shadow-2xl overflow-hidden mb-8">
             <CardContent className="p-8">
               <div className="text-center">
@@ -2993,7 +3132,9 @@ export default function ApartmentsSearchPage() {
                   Explore All Available Properties
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-xl mx-auto">
-                  Browse through our complete collection of apartment listings or use the filters above to find exactly what you're looking for.
+                  Browse through our complete collection of apartment listings
+                  or use the filters above to find exactly what you're looking
+                  for.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button

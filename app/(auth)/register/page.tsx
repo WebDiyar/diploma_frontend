@@ -60,9 +60,8 @@ export default function RegisterPage() {
         });
         console.log("JWT Token saved:", session.rawToken);
 
-        // Redirect if we're on the register page
         if (window.location.pathname === "/register") {
-          router.push("/");
+          router.push("/addProfile");
         }
       }
     };
@@ -125,9 +124,8 @@ export default function RegisterPage() {
         });
         console.log("JWT Token saved (register):", session.rawToken);
       }
-      toast.success("Welcome!");
 
-      router.push("/login");
+      router.push("/profile");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
