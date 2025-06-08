@@ -81,7 +81,7 @@ export function useUserProfile(
 
 export function useUser(
   userId: string,
-  options?: Omit<ExtendedQueryOptions<User>, "qaeryKey" | "queryFn">,
+  options?: Omit<ExtendedQueryOptions<User>, "queryKey" | "queryFn">,
 ) {
   return useQuery<User, Error>({
     queryKey: userKeys.detail(userId),

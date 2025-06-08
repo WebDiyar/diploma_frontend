@@ -54,7 +54,7 @@ const Footer = () => {
             <h3 className="text-base font-bold text-blue-700">NAVIGATION</h3>
             <nav className="flex flex-col space-y-3">
               <Link
-                href="/about"
+                href="/about-us"
                 className="text-base hover:text-blue-700 transition-colors"
               >
                 About Us

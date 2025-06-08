@@ -432,64 +432,6 @@ export default function CreateApartmentPage() {
     });
   }, [apartmentData, activeTab]);
 
-  // Отправка формы с фиксированными URL-ами изображений
-  // const handleSubmit = async () => {
-  //   // Проверка всех вкладок перед отправкой
-  //   let isValid = true;
-  //   const tabs = ["basic-info", "location", "features", "photos", "terms"];
-
-  //   for (const tab of tabs) {
-  //     if (!validateTab(tab)) {
-  //       isValid = false;
-  //       setActiveTab(tab);
-  //       toast.error(
-  //         `Please correct errors in the ${tab.replace("-", " ")} section`,
-  //         {
-  //           position: "top-right",
-  //           autoClose: 3000,
-  //         },
-  //       );
-  //       break;
-  //     }
-  //   }
-
-  //   if (!isValid) return;
-
-  //   setIsSubmitting(true);
-
-  //   try {
-  //     // 1. Создаем фиксированные URL изображений вместо base64
-  //     // Это решает проблему с требованиями бэкенда по схеме URL
-  //     const fixedImageUrls = previewImages.map(
-  //       (_, index) => `https://example.com/apartment-image-${index + 1}.jpg`,
-  //     );
-  //     const imageUrls = previewImages.map((image) => image.url);
-
-  //     // 2. Создаем данные для отправки
-  //     const currentDate = new Date().toISOString();
-  //     const submitData = {
-  //       ...apartmentData,
-  //       ownerId: profile?.userId,
-  //       pictures: imageUrls, // URL-адреса с HTTP схемой
-  //       created_at: currentDate,
-  //       updated_at: currentDate,
-  //     };
-
-  //     console.log("Submitting apartment data:", submitData);
-  //     router.push("/apartment");
-
-  //     // 3. Вызываем мутацию
-  //     createApartmentMutation.mutate(submitData as any);
-  //   } catch (error) {
-  //     console.error("Error creating apartment:", error);
-  //     toast.error("An error occurred. Please try again.", {
-  //       position: "top-right",
-  //       autoClose: 3000,
-  //     });
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
   const handleSubmit = async () => {
     // Проверка всех вкладок перед отправкой
     let isValid = true;

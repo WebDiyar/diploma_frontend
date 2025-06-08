@@ -16,7 +16,6 @@ import {
   Badge,
   MessageCircle,
 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
   Select,
@@ -36,23 +35,10 @@ import {
   useSaveProfile,
 } from "@/store/profileStore";
 import Cookies from "js-cookie";
-import { z } from "zod";
 import { useRouter } from "next/navigation";
-
-const budgetRangeSchema = z
-  .object({
-    min: z.number().nonnegative(),
-    max: z
-      .number()
-      .nonnegative()
-      .refine((val) => val > 0, {
-        message: "Maximum value must be greater than 0",
-      }),
-  })
-  .refine((data) => !data.min || !data.max || data.max >= data.min, {
-    message: "Maximum value must be greater than minimum value",
-    path: ["max"],
-  });
+import { budgetRangeSchema } from "@/zod/profile_validation";
+import { toast, ToastContainer } from "react-toastify";
+import { z } from "zod";
 
 export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -74,7 +60,6 @@ export default function ProfilePage() {
     cancelEditing,
     updateField,
     hasChanges,
-    setProfile,
   } = useProfileStore();
 
   const { loadProfile } = useLoadProfile();

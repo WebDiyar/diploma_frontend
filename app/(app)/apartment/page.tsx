@@ -304,7 +304,7 @@ const ApartmentTableRow = ({
       </TableCell>
       <TableCell className="py-4">
         <span className="text-gray-700 font-medium">
-        {apartment.university_nearby || "Not specified"}
+          {apartment.university_nearby || "Not specified"}
         </span>
       </TableCell>
       <TableCell className="py-4">
@@ -327,7 +327,7 @@ const ApartmentTableRow = ({
           className="text-gray-600 truncate max-w-32"
           title={apartment.address.street}
         >
-          {apartment.address.street  || "No Street Address"}
+          {apartment.address.street || "No Street Address"}
         </span>
       </TableCell>
       <TableCell className="py-4">
@@ -374,6 +374,8 @@ const ApartmentTableRow = ({
 };
 
 // Компонент карточки апартаментов (для grid view)
+// ЗАМЕНИТЕ существующий компонент ApartmentCard на этот:
+
 const ApartmentCard = ({
   apartment,
   onDelete,
@@ -417,118 +419,150 @@ const ApartmentCard = ({
   };
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl group border-0 shadow-lg bg-white">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group border-0 shadow-lg bg-white h-full">
       <div className="relative">
-        <div className="h-56 w-full bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+        {/* Более высокое изображение */}
+        <div className="h-64 w-full bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
           {mainImage ? (
             <img
               src={mainImage}
               alt={apartment.apartment_name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-              <Home className="h-16 w-16 text-blue-300" />
+              <Home className="h-20 w-20 text-blue-300" />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Градиентный оверлей */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
-        {/* Status Badges */}
-        <div className="absolute top-3 left-3">
+        {/* Status Badges - улучшенное позиционирование */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
           {apartment.is_promoted && (
-            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg backdrop-blur-sm">
               <Star className="h-3 w-3 mr-1" />
               Featured
             </Badge>
           )}
-        </div>
-
-        <div className="absolute top-3 right-3">
           <Badge
             className={`${
               apartment.is_active
                 ? "bg-green-500 hover:bg-green-600 text-white"
                 : "bg-gray-500 hover:bg-gray-600 text-white"
-            } shadow-lg border-0`}
+            } shadow-lg border-0 backdrop-blur-sm`}
           >
             {apartment.is_active ? "Online" : "Offline"}
           </Badge>
         </div>
 
-        {/* Price Badge */}
-        <div className="absolute bottom-3 right-3">
-          <Badge className="bg-white/90 backdrop-blur-sm text-blue-600 border-0 shadow-lg font-bold text-sm px-3 py-1">
+        {/* Price Badge - более заметный */}
+        <div className="absolute bottom-4 right-4">
+          <Badge className="bg-white/95 backdrop-blur-sm text-blue-600 border-0 shadow-xl font-bold text-base px-4 py-2 rounded-lg">
             {formatPrice(apartment.price_per_month)}
           </Badge>
         </div>
+
+        {/* University badge */}
+        {apartment.university_nearby && (
+          <div className="absolute top-4 right-4">
+            <Badge className="bg-purple-500/90 backdrop-blur-sm text-white border-0 shadow-lg text-xs px-2 py-1">
+              🎓 {apartment.university_nearby}
+            </Badge>
+          </div>
+        )}
       </div>
 
-      <CardHeader className="pb-3">
-        <CardTitle
-          className="text-xl font-bold text-gray-900 truncate"
-          title={apartment.apartment_name}
-        >
-          {apartment.apartment_name}
-        </CardTitle>
-        <CardDescription className="flex items-center text-gray-600">
-          <MapPin className="h-4 w-4 mr-1 text-blue-500" />
-          {apartment.district_name}, {apartment.address.street}
-        </CardDescription>
-      </CardHeader>
+      <CardContent className="p-6 flex flex-col flex-grow">
+        {/* Заголовок и адрес */}
+        <div className="mb-4">
+          <CardTitle
+            className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]"
+            title={apartment.apartment_name}
+          >
+            {apartment.apartment_name}
+          </CardTitle>
+          <CardDescription className="flex items-center text-gray-600">
+            <MapPin className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
+            <span className="truncate">
+              {apartment.district_name}, {apartment.address.street}
+            </span>
+          </CardDescription>
+        </div>
 
-      <CardContent className="pb-4">
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
-            <Home className="h-4 w-4 mr-2 text-blue-500" />
-            <span className="font-medium">
-              {apartment.number_of_rooms} Room
-              {apartment.number_of_rooms !== 1 ? "s" : ""}
-            </span>
+        {/* Характеристики - улучшенная сетка */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="flex items-center text-sm text-gray-700 bg-blue-50 rounded-xl p-3 transition-colors hover:bg-blue-100">
+            <Home className="h-5 w-5 mr-2 text-blue-500" />
+            <div className="flex flex-col">
+              <span className="font-semibold text-xs text-gray-500 uppercase tracking-wide">
+                Rooms
+              </span>
+              <span className="font-bold">{apartment.number_of_rooms}</span>
+            </div>
           </div>
-          <div className="flex items-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
-            <Ruler className="h-4 w-4 mr-2 text-green-500" />
-            <span className="font-medium">{apartment.area} m²</span>
+          <div className="flex items-center text-sm text-gray-700 bg-green-50 rounded-xl p-3 transition-colors hover:bg-green-100">
+            <Ruler className="h-5 w-5 mr-2 text-green-500" />
+            <div className="flex flex-col">
+              <span className="font-semibold text-xs text-gray-500 uppercase tracking-wide">
+                Area
+              </span>
+              <span className="font-bold">{apartment.area} m²</span>
+            </div>
           </div>
-          <div className="flex items-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
-            <Users className="h-4 w-4 mr-2 text-purple-500" />
-            <span className="font-medium">Max {apartment.max_users}</span>
+          <div className="flex items-center text-sm text-gray-700 bg-purple-50 rounded-xl p-3 transition-colors hover:bg-purple-100">
+            <Users className="h-5 w-5 mr-2 text-purple-500" />
+            <div className="flex flex-col">
+              <span className="font-semibold text-xs text-gray-500 uppercase tracking-wide">
+                Max
+              </span>
+              <span className="font-bold">{apartment.max_users}</span>
+            </div>
           </div>
-          <div className="flex items-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
-            <Calendar className="h-4 w-4 mr-2 text-orange-500" />
-            <span className="font-medium">
-              {formatDate(apartment.available_from)}
-            </span>
+          <div className="flex items-center text-sm text-gray-700 bg-orange-50 rounded-xl p-3 transition-colors hover:bg-orange-100">
+            <Calendar className="h-5 w-5 mr-2 text-orange-500" />
+            <div className="flex flex-col">
+              <span className="font-semibold text-xs text-gray-500 uppercase tracking-wide">
+                Available
+              </span>
+              <span className="font-bold text-xs">
+                {formatDate(apartment.available_from)}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center text-xs text-gray-500 mb-4">
-          <Clock className="h-3 w-3 mr-1" />
-          Posted on {createdAt}
+        {/* Дата публикации */}
+        <div className="flex items-center text-xs text-gray-500 mb-6 bg-gray-50 rounded-lg p-2">
+          <Clock className="h-4 w-4 mr-2" />
+          <span>Posted on {createdAt}</span>
         </div>
 
-        <Separator className="mb-4" />
+        {/* Разделитель */}
+        <Separator className="mb-6" />
 
-        <div className="flex justify-between items-center">
+        {/* Кнопки действий - улучшенный layout */}
+        <div className="flex items-center justify-between gap-3 mt-auto">
           <Button
             variant="outline"
-            size="sm"
+            size="default"
             onClick={handleViewDetails}
-            className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+            className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
           >
-            <Eye className="h-4 w-4 mr-1" />
-            View
+            <Eye className="h-4 w-4 mr-2" />
+            View Details
           </Button>
 
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="default"
                     onClick={handleEdit}
-                    className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:border-amber-300 transition-colors"
+                    className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:border-amber-300 transition-all duration-200 px-4"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -542,10 +576,10 @@ const ApartmentCard = ({
                 <TooltipTrigger asChild>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="default"
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-colors"
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all duration-200 px-4"
                   >
                     {isDeleting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -665,6 +699,88 @@ const Pagination = ({
   );
 };
 
+const BeautifulLoading = () => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="text-center space-y-6">
+      <div className="relative">
+        <div className="w-20 h-20 mx-auto">
+          <div className="absolute inset-0 rounded-full border-4 border-blue-200"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
+          <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-purple-600 animate-spin animation-delay-75"></div>
+          <div className="absolute inset-4 rounded-full border-4 border-transparent border-t-indigo-600 animate-spin animation-delay-150"></div>
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Building2 className="h-8 w-8 text-blue-600 animate-pulse" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          Loading Your Properties
+        </h3>
+        <div className="flex items-center justify-center space-x-1">
+          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce animation-delay-75"></div>
+          <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce animation-delay-150"></div>
+        </div>
+        <p className="text-gray-500 text-sm">
+          Fetching your apartment listings...
+        </p>
+      </div>
+
+      <div className="flex justify-center space-x-4 opacity-60">
+        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg animate-pulse animation-delay-200 flex items-center justify-center">
+          <Home className="h-6 w-6 text-blue-500" />
+        </div>
+        <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg animate-pulse animation-delay-300 flex items-center justify-center">
+          <MapPin className="h-6 w-6 text-purple-500" />
+        </div>
+        <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-lg animate-pulse animation-delay-400 flex items-center justify-center">
+          <DollarSign className="h-6 w-6 text-indigo-500" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const ImprovedApartmentCardSkeleton = () => (
+  <Card className="overflow-hidden border-0 shadow-lg h-full">
+    <div className="relative">
+      <div className="h-64 w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:400%_100%] animate-[shimmer_1.5s_ease-in-out_infinite]"></div>
+      <div className="absolute top-4 left-4 space-y-2">
+        <div className="w-20 h-6 bg-gray-300 rounded-full animate-pulse"></div>
+        <div className="w-16 h-6 bg-gray-300 rounded-full animate-pulse"></div>
+      </div>
+      <div className="absolute bottom-4 right-4">
+        <div className="w-24 h-8 bg-gray-300 rounded-lg animate-pulse"></div>
+      </div>
+    </div>
+    <CardContent className="p-6">
+      <div className="mb-4">
+        <div className="h-6 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:400%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:400%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded w-1/2"></div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className="h-16 bg-gray-100 rounded-xl animate-pulse"
+            style={{ animationDelay: `${i * 100}ms` }}
+          ></div>
+        ))}
+      </div>
+      <div className="flex justify-between items-center gap-3">
+        <div className="h-10 bg-gray-200 rounded flex-1 animate-pulse"></div>
+        <div className="flex gap-2">
+          <div className="h-10 w-12 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-10 w-12 bg-gray-200 rounded animate-pulse animation-delay-75"></div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 // Основная страница моих апартаментов
 export default function MyApartmentsPage() {
   const {
@@ -721,7 +837,7 @@ export default function MyApartmentsPage() {
 
   useEffect(() => {
     console.log("Apartments data:", apartments);
-  }, [apartments])
+  }, [apartments]);
   // Фильтрация и сортировка апартаментов
   const filteredAndSortedApartments = apartments
     ? apartments
@@ -736,9 +852,9 @@ export default function MyApartmentsPage() {
             apartment.district_name
               .toLowerCase()
               .includes(searchQuery.toLowerCase()) ||
-              (apartment.university_nearby || "")
-    .toLowerCase()
-    .includes(searchQuery.toLowerCase());;
+            (apartment.university_nearby || "")
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase());
 
           let matchesStatus = true;
           if (statusFilter === "active") matchesStatus = apartment.is_active;
@@ -773,10 +889,10 @@ export default function MyApartmentsPage() {
               aValue = a.district_name.toLowerCase();
               bValue = b.district_name.toLowerCase();
               break;
-             case "university_nearby":
-                aValue = (a.university_nearby || "").toLowerCase();
-                bValue = (b.university_nearby || "").toLowerCase();
-                break;
+            case "university_nearby":
+              aValue = (a.university_nearby || "").toLowerCase();
+              bValue = (b.university_nearby || "").toLowerCase();
+              break;
             default:
               return 0;
           }
@@ -1013,27 +1129,59 @@ export default function MyApartmentsPage() {
             </div>
 
             {/* Results info */}
-            {!isLoading && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <span className="text-sm text-gray-600">
-                    Showing {paginatedApartments.length} of{" "}
-                    {filteredAndSortedApartments.length} properties
-                    {searchQuery && ` matching "${searchQuery}"`}
-                  </span>
-                  {filteredAndSortedApartments.length !==
-                    apartments?.length && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSearchQuery("");
-                        setStatusFilter("all");
-                      }}
-                      className="w-fit text-gray-600 border-gray-200 hover:bg-gray-50"
-                    >
-                      Clear Filters
-                    </Button>
+            {isLoading && (
+              <div className="space-y-6">
+                {/* Основной красивый лоадинг */}
+                <BeautifulLoading />
+
+                {/* Опционально: показать скелетоны под основным лоадингом */}
+                <div className="opacity-30">
+                  {viewMode === "grid" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {[...Array(4)].map((_, index) => (
+                        <ImprovedApartmentCardSkeleton key={index} />
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="border-0 shadow-lg">
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-gray-50/50 border-b border-gray-100">
+                              <TableHead className="font-semibold text-gray-700">
+                                Image
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-700">
+                                Property
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-700">
+                                Status
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-700">
+                                University Nearby
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-700">
+                                Published
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-700">
+                                Price
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-700">
+                                Address
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-700">
+                                Actions
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {[...Array(3)].map((_, index) => (
+                              <TableRowSkeleton key={index} />
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               </div>
@@ -1069,7 +1217,7 @@ export default function MyApartmentsPage() {
                           <TableHead className="font-semibold text-gray-700">
                             University Nearby
                           </TableHead>
-                          
+
                           <TableHead className="font-semibold text-gray-700">
                             Published
                           </TableHead>
@@ -1189,7 +1337,7 @@ export default function MyApartmentsPage() {
           {!isLoading && !isError && filteredAndSortedApartments.length > 0 && (
             <>
               {viewMode === "grid" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
                   {paginatedApartments.map((apartment) => (
                     <ApartmentCard
                       key={apartment.apartmentId}
@@ -1221,14 +1369,14 @@ export default function MyApartmentsPage() {
                               Status
                             </TableHead>
                             <TableHead
-  className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
-  onClick={() => handleSort("university_nearby")}
->
-  <div className="flex items-center space-x-1">
-    <span>University Nearby</span>
-    {getSortIcon("university_nearby")}
-  </div>
-</TableHead>
+                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
+                              onClick={() => handleSort("university_nearby")}
+                            >
+                              <div className="flex items-center space-x-1">
+                                <span>University Nearby</span>
+                                {getSortIcon("university_nearby")}
+                              </div>
+                            </TableHead>
                             <TableHead
                               className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
                               onClick={() => handleSort("created_at")}
@@ -1292,3 +1440,30 @@ export default function MyApartmentsPage() {
     </div>
   );
 }
+
+const shimmerStyles = `
+@keyframes shimmer {
+  0% { background-position: -400% 0; }
+  100% { background-position: 400% 0; }
+}
+
+.animation-delay-75 {
+  animation-delay: 75ms;
+}
+
+.animation-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+`;

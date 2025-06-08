@@ -24,7 +24,19 @@ export default function AboutUsPage() {
   };
 
   const handleSubmit = () => {
-    toast.success("Submitted your question data!", {
+    if (!formData.fullName.trim() || !formData.question.trim()) {
+      toast.error("Please fill in your name and question!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+
+    toast.success("Your question has been sent successfully.!", {
       position: "top-right",
       autoClose: 2000,
       hideProgressBar: false,
@@ -32,11 +44,13 @@ export default function AboutUsPage() {
       pauseOnHover: true,
       draggable: true,
     });
+
+    console.log("Submitted question data: ", formData);
+
     setFormData({
       fullName: "",
       question: "",
     });
-    console.log("Submitted question data: ", formData);
   };
 
   return (
@@ -281,7 +295,7 @@ export default function AboutUsPage() {
               <div className="flex items-center mb-3 sm:mb-4">
                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden mr-3">
                   <Image
-                    src="/aboutus/maxim.png"
+                    src="/aboutus/1_aigerim.jpg"
                     alt="Aruzhan Ospanova"
                     width={48}
                     height={48}
@@ -303,20 +317,21 @@ export default function AboutUsPage() {
               <div className="flex items-center mb-3 sm:mb-4">
                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden mr-3">
                   <Image
-                    src="/aboutus/maxim.png"
-                    alt="Almas Muratuly"
+                    src="/aboutus/2_raiymbek.jpg"
+                    alt="  aiymbek Batyr"
                     width={48}
                     height={48}
                     className="h-full w-full object-cover"
                   />
                 </div>
                 <h4 className="text-white text-lg sm:text-xl font-medium">
-                  Almas Muratuly
+                  Raiymbek Batyr
                 </h4>
               </div>
               <p className="text-white text-sm sm:text-base">
-                Safe payments and verified landlords made my booking
-                stress-free. Highly recommended!
+                I highly recommend it because I was able to find an apartment
+                near Aitu: before that I lived near ENU and it was hard for me
+                to go back and forth to my university.
               </p>
             </div>
 
@@ -325,7 +340,7 @@ export default function AboutUsPage() {
               <div className="flex items-center mb-3 sm:mb-4">
                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden mr-3">
                   <Image
-                    src="/aboutus/maxim.png"
+                    src="/aboutus/3_toktar.jpg"
                     alt="Toktar Sultan"
                     width={48}
                     height={48}
@@ -342,21 +357,11 @@ export default function AboutUsPage() {
               </p>
             </div>
           </div>
-
-          {/* Read More Button */}
-          <div className="mt-6 sm:mt-8">
-            <Button
-              variant="outline"
-              className="bg-white text-gray-800 font-medium py-1.5 px-6 sm:py-2 sm:px-8 shadow-sm border-[0.3px] cursor-pointer"
-            >
-              Read More
-            </Button>
-          </div>
         </div>
       </div>
 
       {/* Contact Form Section */}
-      <div className="w-full bg-blue-700 py-10 sm:py-16 px-4 sm:px-6 lg:px-8 shadow-sm">
+      <div className="w-full bg-blue-700  mt-5 py-10 sm:py-16 px-4 sm:px-6 lg:px-8 shadow-sm">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-white text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
             Have Questions? Need Assistance? We are Here to Help!
@@ -374,7 +379,7 @@ export default function AboutUsPage() {
               value={formData.fullName}
               onChange={handleChange}
               placeholder="Full Name"
-              className="w-full bg-white sm:w-auto flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-md border-0"
+              className="w-full bg-white sm:w-auto flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-md "
             />
             <Input
               type="text"

@@ -55,7 +55,7 @@ export default function Navbar() {
                 height={55}
                 className="h-auto w-auto sm:w-[150px] md:w-[160px] lg:w-[170px] object-contain"
               />
-            </Link> 
+            </Link>
           </div>
 
           {/* Desktop Navigation Links */}
@@ -120,13 +120,12 @@ export default function Navbar() {
               </Link>
             )}
 
-
             <Button
-                  onClick={handleLogOut}
-                  className="text-white bg-red-600 hover:bg-red-700"
-                >
-                  Log out
-                </Button>
+              onClick={handleLogOut}
+              className="text-white bg-red-600 hover:bg-red-700"
+            >
+              Log out
+            </Button>
           </div>
 
           {/* Mobile menu button */}
@@ -175,6 +174,18 @@ export default function Navbar() {
                 Home
               </Link>
               <Link
+                href="/apartments"
+                className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
+              >
+                All Apartments
+              </Link>
+              <Link
+                href="/booking"
+                className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
+              >
+                Bookings
+              </Link>
+              <Link
                 href="/apartment"
                 className="block text-gray-600 hover:text-gray-900 py-2 border-b border-gray-100"
                 onClick={() => setIsMenuOpen(false)}
@@ -204,25 +215,6 @@ export default function Navbar() {
                 >
                   Log In
                 </Link>
-
-                {/* Language selector in mobile menu */}
-                <div className="flex items-center text-gray-600 py-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-                    />
-                  </svg>
-                  <span>Language</span>
-                </div>
 
                 <Button
                   onClick={handleLogOut}

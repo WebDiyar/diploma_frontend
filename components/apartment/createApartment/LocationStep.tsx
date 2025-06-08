@@ -291,30 +291,11 @@ export default function LocationStep({
             >
               International University of Astana
             </SelectItem>
+            <SelectItem value="Other" className="hover:bg-blue-50">
+              Other
+            </SelectItem>
           </SelectContent>
         </Select>
-      </div>
-
-      {/* Map Location Picker */}
-      <div className="bg-gradient-to-r from-gray-100 to-gray-200 p-6 rounded-lg border border-dashed border-gray-300 hover:border-blue-400 transition-colors duration-200">
-        <div className="flex flex-col items-center text-center space-y-3">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
-            <MapPin className="h-6 w-6 text-blue-500" />
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-800">Map Location</h4>
-            <p className="text-gray-500 text-sm mt-1">
-              Select your apartment's exact location on the map
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-2 bg-white shadow-sm border-gray-200 hover:bg-blue-50 hover:border-blue-300"
-          >
-            Open Map Picker
-          </Button>
-        </div>
       </div>
 
       <div className="mt-8 flex justify-between">
