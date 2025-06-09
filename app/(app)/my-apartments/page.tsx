@@ -1327,7 +1327,7 @@ export default function MyApartmentsPage() {
                       You haven't created any apartment listings yet. Create
                       your first property listing and start earning.
                     </p>
-                    <Link href="/apartment/create">
+                    <Link href="/my-apartments/create">
                       <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-3 text-lg">
                         <Plus className="h-5 w-5 mr-2" />
                         Create Your First Listing
