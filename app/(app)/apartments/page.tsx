@@ -221,6 +221,10 @@ const ApartmentDetailsModal = ({
 
   const currentApartment = apartmentDetails || apartment;
 
+  useEffect(() => {
+    console.log("currentApartment", currentApartment);
+  }, [currentApartment]);
+
   // Check if user already has a booking for this apartment
   const hasExistingBooking =
     userBookings?.some(
@@ -290,7 +294,7 @@ const ApartmentDetailsModal = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-[800px] w-full max-h-[95vh] overflow-y-auto bg-white">
+        <DialogContent className="min-w-[50%] w-full max-h-[95vh] overflow-y-auto bg-white">
           <DialogHeader className="pb-4">
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               {currentApartment.apartment_name}
@@ -470,11 +474,11 @@ const ApartmentDetailsModal = ({
                   <div className="space-y-2 text-sm">
                     <p>
                       <strong>Available From:</strong>{" "}
-                      {formatDate(currentApartment.available_from)}
+                      {currentApartment.available_from}
                     </p>
                     <p>
                       <strong>Available Until:</strong>{" "}
-                      {formatDate(currentApartment.available_until)}
+                      {currentApartment.available_until}
                     </p>
                     <p>
                       <strong>Created:</strong>{" "}
@@ -497,13 +501,6 @@ const ApartmentDetailsModal = ({
                       <strong>Preferences:</strong>{" "}
                       {currentApartment.roommate_preferences ||
                         "None specified"}
-                    </p>
-                    <p>
-                      <strong>Owner ID:</strong> {currentApartment.ownerId}
-                    </p>
-                    <p>
-                      <strong>Apartment ID:</strong>{" "}
-                      {currentApartment.apartmentId}
                     </p>
                   </div>
                 </div>

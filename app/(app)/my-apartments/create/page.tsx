@@ -84,7 +84,7 @@ export default function CreateApartmentPage() {
         autoClose: 5000,
       });
       setIsSubmitting(false);
-      router.push("/apartment");
+      router.push("/my-apartments");
     },
     onError: (error) => {
       toast.error(`Failed to create apartment: ${error.message}`, {

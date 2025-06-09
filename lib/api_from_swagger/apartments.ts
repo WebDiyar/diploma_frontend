@@ -33,7 +33,7 @@ export interface Apartment {
   floor: number;
   number_of_rooms: number;
   max_users: number;
-  available_from: string; // ISO date string
+  available_from: string;
   available_until: string; // ISO date string
   university_nearby: string;
   pictures: string[];

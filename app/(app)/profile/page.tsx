@@ -39,15 +39,12 @@ import { useRouter } from "next/navigation";
 import { budgetRangeSchema } from "@/zod/profile_validation";
 import { toast, ToastContainer } from "react-toastify";
 import { z } from "zod";
+import { useDeleteUser } from "@/hooks/users";
 
 export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [idDocumentPreview, setIdDocumentPreview] = useState<string | null>(
-    null,
-  );
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const idDocumentInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const {
@@ -64,6 +61,23 @@ export default function ProfilePage() {
 
   const { loadProfile } = useLoadProfile();
   const { saveChanges } = useSaveProfile();
+
+  const deleteUser = useDeleteUser({
+    onSuccess: () => {
+      toast.success("Account deleted successfully", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      Cookies.remove("jwt_token");
+      router.push("/login");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete account. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    },
+  });
 
   useEffect(() => {
     const token = Cookies.get("jwt_token");
@@ -90,9 +104,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile?.avatar_url) {
       setAvatarPreview(profile.avatar_url);
-    }
-    if (profile?.id_document_url) {
-      setIdDocumentPreview(profile.id_document_url);
     }
   }, [profile]);
 
@@ -137,49 +148,16 @@ export default function ProfilePage() {
     };
     reader.readAsDataURL(file);
   };
-  const [documentFileName, setDocumentFileName] = useState<string>("");
-
-  const handleIdDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Проверяем тип файла (только PDF и DOCX)
-    const fileType = file.type;
-    if (
-      fileType !== "application/pdf" &&
-      fileType !==
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
-      toast.error("Please upload a PDF or DOCX file", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setIdDocumentPreview(base64String);
-      setDocumentFileName(file.name);
-      updateField("id_document_url", base64String);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleAvatarUploadClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleIdDocumentUploadClick = () => {
-    idDocumentInputRef.current?.click();
   };
 
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "Not provided";
 
     const date = new Date(dateString);
-    return date.toLocaleString("ru-KZ", {
+    return date.toLocaleString("en-US", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -234,23 +212,18 @@ export default function ProfilePage() {
       setIsSaving(false);
     }
   };
+
   const [newLanguageItem, setNewLanguageItem] = useState("");
 
-  const handleLanguagePreferencesChange = (value: string) => {
-    // Разделяем строку по запятым и удаляем лишние пробелы
-    const languages = value
-      .split(".")
-      .map((lang) => lang.trim())
-      .filter(Boolean);
-    // Явно указываем, что это массив строк
-    updateField("language_preferences", languages as unknown as string[]);
-  };
   const handleAddLanguage = () => {
     if (!newLanguageItem.trim()) return;
 
     const currentLanguages = editedProfile?.language_preferences || [];
     if (currentLanguages.includes(newLanguageItem.trim())) {
-      toast.error("This language is already in the list");
+      toast.error("This language is already in the list", {
+        position: "top-right",
+        autoClose: 3000,
+      });
       return;
     }
 
@@ -267,6 +240,19 @@ export default function ProfilePage() {
     newLanguages.splice(index, 1);
     updateField("language_preferences", newLanguages);
   };
+
+  const handleDeleteAccount = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone.",
+      )
+    ) {
+      if (profile?.userId) {
+        deleteUser.mutate(profile.userId);
+      }
+    }
+  };
+
   if (loading && !profile) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -368,7 +354,7 @@ export default function ProfilePage() {
                   </p>
 
                   <Button
-                    className="w-full mb-6 bg-[#a4faff] hover:bg-[#46b9c0] cursor-pointer text-[#111827	]"
+                    className="w-full mb-6 bg-[#a4faff] hover:bg-[#46b9c0] cursor-pointer text-[#111827]"
                     onClick={handleAvatarUploadClick}
                     disabled={!isEditing}
                   >
@@ -394,20 +380,6 @@ export default function ProfilePage() {
                       </span>
                     </div>
 
-                    {/* <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-700">Last Login</span>
-                      <span className="text-gray-700 font-medium">
-                        {formatDate(profile?.last_login)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-700">User ID</span>
-                      <span className="text-gray-700 font-medium text-xs">
-                        {profile?.userId || "N/A"}
-                      </span>
-                    </div> */}
-
                     <div className="flex items-center justify-between py-2">
                       <span className="text-gray-700">Admin</span>
                       <span className="text-gray-700 font-medium">
@@ -421,28 +393,23 @@ export default function ProfilePage() {
                         {profile?.is_landlord ? "Yes" : "No"}
                       </span>
                     </div>
-
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-700">Verified Landlord</span>
-                      <span className="text-gray-700 font-medium">
-                        {profile?.is_verified_landlord ? "Yes" : "No"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-700">Document Verified</span>
-                      <span className="text-gray-700 font-medium">
-                        {profile?.document_verified ? "Yes" : "No"}
-                      </span>
-                    </div>
                   </div>
 
-                  <Button
+                  {/* <Button
                     variant="destructive"
                     className="mt-8 w-full bg-red-600 hover:bg-red-700"
+                    onClick={handleDeleteAccount}
+                    disabled={deleteUser.isPending}
                   >
-                    Delete Account
-                  </Button>
+                    {deleteUser.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      "Delete Account"
+                    )}
+                  </Button> */}
                 </div>
               </CardContent>
             </Card>
@@ -462,7 +429,7 @@ export default function ProfilePage() {
                       <Button
                         type="button"
                         onClick={startEditing}
-                        className="bg-[#a4faff] hover:bg-[#46b9c0] cursor-pointer text-[#111827 ]"
+                        className="bg-[#a4faff] hover:bg-[#46b9c0] cursor-pointer text-[#111827]"
                       >
                         Edit
                       </Button>
@@ -827,170 +794,24 @@ export default function ProfilePage() {
                 </div>
               </Card>
 
-              {/* Document Verification */}
+              {/* Housing Preferences - Improved and Wider */}
               <Card className="shadow-md border-blue-100">
-                <div className="p-6 bg-white">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-6">
-                    Document Verification
-                  </h2>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ID Document (PDF or DOCX only)
-                    </label>
-
-                    <div className="flex flex-col space-y-4">
-                      {(
-                        isEditing ? idDocumentPreview : profile?.id_document_url
-                      ) ? (
-                        <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
-                          <div className="flex flex-col items-center">
-                            {(() => {
-                              const url = isEditing
-                                ? idDocumentPreview || ""
-                                : profile?.id_document_url || "";
-                              const fileName = isEditing
-                                ? documentFileName || "document"
-                                : "document";
-                              if (url.includes("data:application/pdf")) {
-                                return (
-                                  <div className="flex flex-col items-center">
-                                    <div className="bg-rose-100 text-rose-700 p-3 rounded-full mb-2">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-8 w-8"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    </div>
-                                    <p className="text-sm font-medium text-gray-800 mb-1">
-                                      {fileName}
-                                    </p>
-                                    <a
-                                      href={url}
-                                      download="document.pdf"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:underline text-sm"
-                                    >
-                                      View or Download PDF Document
-                                    </a>
-                                  </div>
-                                );
-                              } else if (
-                                url.includes(
-                                  "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                )
-                              ) {
-                                return (
-                                  <div className="flex flex-col items-center">
-                                    <div className="bg-blue-100 text-blue-700 p-3 rounded-full mb-2">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-8 w-8"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    </div>
-                                    <p className="text-sm font-medium text-gray-800 mb-1">
-                                      {fileName}
-                                    </p>
-
-                                    <a
-                                      href={url}
-                                      download="document.docx"
-                                      className="text-blue-600 hover:underline text-sm"
-                                    >
-                                      Download DOCX Document
-                                    </a>
-                                  </div>
-                                );
-                              } else if (url) {
-                                return (
-                                  <div className="flex flex-col items-center">
-                                    <div className="bg-gray-100 text-gray-700 p-3 rounded-full mb-2">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-8 w-8"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    </div>
-                                    <p className="text-sm font-medium text-gray-800">
-                                      {fileName}
-                                    </p>
-
-                                    <p className="text-sm text-gray-700">
-                                      Document Uploaded
-                                    </p>
-                                  </div>
-                                );
-                              }
-                            })()}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="bg-gray-50 px-3 py-6 rounded-md text-gray-500 text-center border border-gray-200">
-                          No ID document uploaded
-                        </div>
-                      )}
-
-                      {isEditing && (
-                        <>
-                          <Button
-                            onClick={handleIdDocumentUploadClick}
-                            className="bg-[#a4faff]  cursor-pointer text-[#111827] w-full"
-                          >
-                            Upload ID Document (PDF or DOCX)
-                          </Button>
-                          <input
-                            type="file"
-                            ref={idDocumentInputRef}
-                            className="hidden"
-                            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                            onChange={handleIdDocumentChange}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="shadow-md border-blue-100">
-                <div className="p-6 bg-white">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-6">
+                <div className="p-8 bg-white">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-8">
                     Housing Preferences
                   </h2>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="space-y-8">
+                    {/* Budget Range Section */}
+                    <div className=" p-6 rounded-xl border border-blue-100">
+                      <label className="block text-lg font-semibold text-gray-800 mb-4">
                         Budget Range (KZT)
                       </label>
                       {isEditing ? (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-xs text-gray-500 mb-1 block">
-                              Minimum
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-600 block">
+                              Minimum Budget
                             </label>
                             <Input
                               type="number"
@@ -998,13 +819,13 @@ export default function ProfilePage() {
                               onChange={(e) =>
                                 handleBudgetChange("min", e.target.value)
                               }
-                              className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                              className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-lg py-3"
                               placeholder="Enter minimum budget"
                             />
                           </div>
-                          <div>
-                            <label className="text-xs text-gray-500 mb-1 block">
-                              Maximum
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-600 block">
+                              Maximum Budget
                             </label>
                             <Input
                               type="number"
@@ -1012,32 +833,32 @@ export default function ProfilePage() {
                               onChange={(e) =>
                                 handleBudgetChange("max", e.target.value)
                               }
-                              className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                              className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-lg py-3"
                               placeholder="Enter maximum budget"
                             />
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-gray-50 px-4 py-3 rounded-md text-gray-800">
+                        <div className="bg-white px-6 py-4 rounded-lg border border-gray-200">
                           {profile?.budget_range ? (
-                            <div className="space-y-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               {profile.budget_range.min !== undefined && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">
+                                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                                  <span className="text-gray-600 font-medium">
                                     Minimum:
                                   </span>
-                                  <span className="font-medium">
+                                  <span className="font-bold text-[14px] text-green-700 sm:text-[16px]">
                                     {profile.budget_range.min.toLocaleString()}{" "}
                                     KZT
                                   </span>
                                 </div>
                               )}
                               {profile.budget_range.max !== undefined && (
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">
+                                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                                  <span className="text-gray-600 font-medium">
                                     Maximum:
                                   </span>
-                                  <span className="font-medium">
+                                  <span className="font-bold text-[14px] text-blue-700 sm:text-[16px] ">
                                     {profile.budget_range.max.toLocaleString()}{" "}
                                     KZT
                                   </span>
@@ -1045,94 +866,99 @@ export default function ProfilePage() {
                               )}
                               {profile.budget_range.min === undefined &&
                                 profile.budget_range.max === undefined && (
-                                  <div>Not provided</div>
+                                  <div className="col-span-2 text-center text-gray-500 py-4">
+                                    Budget range not provided
+                                  </div>
                                 )}
                             </div>
                           ) : (
-                            <div>Not provided</div>
+                            <div className="text-center text-gray-500 py-4">
+                              Budget range not provided
+                            </div>
                           )}
                         </div>
                       )}
+                    </div>
 
-                      <div className="mt-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Language Preferences
-                          </label>
-                          {isEditing && (
-                            <Badge className="text-blue-600 border-blue-200">
-                              Click + to add languages
-                            </Badge>
-                          )}
-                        </div>
-
+                    {/* Language Preferences Section */}
+                    <div className=" p-6 rounded-xl border border-purple-100">
+                      <div className="flex items-center justify-between mb-6">
+                        <label className="block text-lg font-semibold text-gray-800">
+                          Language Preferences
+                        </label>
                         {isEditing && (
-                          <div className="flex gap-2 mb-4">
-                            <Input
-                              placeholder="Add language (e.g., English, Russian, Kazakh)"
-                              value={newLanguageItem}
-                              onChange={(e) =>
-                                setNewLanguageItem(e.target.value)
-                              }
-                              onKeyDown={(e) =>
-                                e.key === "Enter" && handleAddLanguage()
-                              }
-                              className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                            />
-                            <Button
-                              onClick={handleAddLanguage}
-                              className="bg-[#a4faff] hover:bg-[#46b9c0] cursor-pointer text-[#111827 ]"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-
-                        <div className="space-y-3">
-                          {(
-                            editedProfile?.language_preferences ||
-                            profile?.language_preferences ||
-                            []
-                          ).map((language, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50/50 p-4 rounded-xl border border-blue-100"
-                            >
-                              <div className="flex items-center">
-                                <CheckCircle className="h-4 w-4 text-blue-500 mr-2" />
-                                <span className="font-medium text-gray-800">
-                                  {language}
-                                </span>
-                              </div>
-                              {isEditing && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveLanguage(index)}
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-
-                        {!(
-                          editedProfile?.language_preferences ||
-                          profile?.language_preferences
-                        )?.length && (
-                          <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                            <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-gray-500">No languages added</p>
-                            {isEditing && (
-                              <p className="text-sm text-gray-400 mt-1">
-                                Add languages using the form above
-                              </p>
-                            )}
-                          </div>
+                          <Badge className=" border-purple-200 bg-purple-50">
+                            Add your preferred languages
+                          </Badge>
                         )}
                       </div>
+
+                      {isEditing && (
+                        <div className="flex gap-3 mb-6">
+                          <Input
+                            placeholder="Add language (e.g., English, Russian, Kazakh)"
+                            value={newLanguageItem}
+                            onChange={(e) => setNewLanguageItem(e.target.value)}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && handleAddLanguage()
+                            }
+                            className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-lg py-3"
+                          />
+                          <Button
+                            onClick={handleAddLanguage}
+                            className="bg-purple-600 hover:bg-purple-700 px-6 py-3"
+                          >
+                            <Plus className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        {(
+                          editedProfile?.language_preferences ||
+                          profile?.language_preferences ||
+                          []
+                        ).map((language, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-white p-4 rounded-xl border border-purple-100 shadow-sm"
+                          >
+                            <div className="flex items-center">
+                              <CheckCircle className="h-5 w-5 text-purple-500 mr-3" />
+                              <span className="font-semibold text-gray-800 text-lg">
+                                {language}
+                              </span>
+                            </div>
+                            {isEditing && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveLanguage(index)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {!(
+                        editedProfile?.language_preferences ||
+                        profile?.language_preferences
+                      )?.length && (
+                        <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-purple-200">
+                          <MessageCircle className="h-12 w-12 text-purple-300 mx-auto mb-4" />
+                          <p className="text-gray-500 text-lg">
+                            No languages added yet
+                          </p>
+                          {isEditing && (
+                            <p className="text-sm text-gray-400 mt-2">
+                              Use the form above to add your preferred languages
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1230,7 +1056,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     ) : (
-                      <div className=" px-1 py-3 rounded-md">
+                      <div className="px-1 py-3 rounded-md">
                         {profile?.social_links ? (
                           <div className="space-y-3">
                             {profile.social_links.instagram && (
@@ -1302,62 +1128,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </Card>
-
-              {/* Landlord Information */}
-              {(profile?.is_landlord || isEditing) && (
-                <Card className="shadow-md border-blue-100">
-                  <div className="p-6 bg-white">
-                    <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-xl font-semibold text-gray-800">
-                        Landlord Information
-                      </h2>
-                      {profile?.is_landlord &&
-                        !profile?.is_verified_landlord && (
-                          <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
-                            Pending Verification
-                          </div>
-                        )}
-                      {profile?.is_landlord &&
-                        profile?.is_verified_landlord && (
-                          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                            Verified Landlord
-                          </div>
-                        )}
-                    </div>
-
-                    <div className="space-y-4">
-                      {isEditing && (
-                        <div className="mb-4">
-                          <label className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={editedProfile?.is_landlord || false}
-                              onChange={(e) =>
-                                updateField("is_landlord", e.target.checked)
-                              }
-                              className="rounded border-gray-300 text-blue-600"
-                            />
-                            <span className="text-gray-700">
-                              Register as a landlord
-                            </span>
-                          </label>
-                        </div>
-                      )}
-
-                      {(profile?.is_landlord ||
-                        (isEditing && editedProfile?.is_landlord)) && (
-                        <div className="bg-blue-50 p-4 rounded-md">
-                          <p className="text-sm text-blue-800">
-                            {profile?.is_verified_landlord
-                              ? "Your landlord account is verified. You can now list properties."
-                              : "Your landlord account is pending verification. Our team will review your information shortly."}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              )}
 
               {/* Edit mode controls */}
               {isEditing && (

@@ -44,6 +44,17 @@ import {
   TrendingUp,
   Activity,
   MoreHorizontal,
+  FileText,
+  UserCheck,
+  Mail,
+  Phone,
+  BookOpen,
+  X,
+  Check,
+  MessageSquare,
+  RefreshCw,
+  GraduationCap,
+  Bed,
 } from "lucide-react";
 import {
   Tooltip,
@@ -75,11 +86,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useDeleteApartment } from "@/hooks/apartments";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { useProfileStore } from "@/store/profileStore";
 
-// Стоимость ренты с красивым форматированием
+// Импортируем API функции для получения количества заявок
+import { getApartmentBookings } from "@/lib/api_from_swagger/booking";
+
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("kk-KZ", {
     style: "currency",
@@ -88,7 +100,6 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-// Форматирование даты
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -98,14 +109,11 @@ const formatDate = (dateString: string) => {
   });
 };
 
-// Функция для преобразования base64 или URL в рабочий URL для изображения
 const getImageUrl = (url: string) => {
-  // Если это base64 строка - используем как есть
   if (url?.startsWith("data:image")) {
     return url;
   }
 
-  // Если это HTTP URL и не содержит example.com - используем как есть
   if (url?.startsWith("http://") || url?.startsWith("https://")) {
     if (url.includes("example.com")) {
       return `https://source.unsplash.com/random/800x600/?apartment&sig=${Math.random()}`;
@@ -113,22 +121,85 @@ const getImageUrl = (url: string) => {
     return url;
   }
 
-  // Fallback для плейсхолдера
   return "https://source.unsplash.com/random/800x600/?apartment";
 };
-// Типы для сортировки и фильтрации
+
 type SortField =
   | "name"
   | "price"
   | "created_at"
   | "available_from"
   | "district_name"
-  | "university_nearby";
+  | "university_nearby"
+  | "number_of_rooms"
+  | "area";
 type SortOrder = "asc" | "desc";
 type ViewMode = "table" | "grid";
 type StatusFilter = "all" | "active" | "inactive" | "promoted";
+type PriceRangeFilter =
+  | "all"
+  | "under100k"
+  | "100k-200k"
+  | "200k-300k"
+  | "over300k";
+type RoomsFilter = "all" | "1" | "2" | "3" | "4+";
 
-// Компонент статистики
+// Компонент кнопки для перехода к заявкам
+const ApplicationsButton = ({
+  apartmentId,
+  apartmentName,
+}: {
+  apartmentId: string;
+  apartmentName: string;
+}) => {
+  const [applicationsCount, setApplicationsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  // Загружаем количество заявок при монтировании компонента
+  useEffect(() => {
+    const loadBookingsCount = async () => {
+      if (!apartmentId) return;
+
+      setIsLoading(true);
+      try {
+        const bookingsData = await getApartmentBookings(apartmentId);
+        setApplicationsCount(bookingsData?.length || 0);
+      } catch (err) {
+        console.error("Failed to load bookings count:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBookingsCount();
+  }, [apartmentId]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/my-apartments/${apartmentId}/bookings`);
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleClick}
+      className="h-8 px-3 text-blue-600 border-blue-200 hover:bg-blue-50"
+      type="button"
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+      ) : (
+        <FileText className="h-4 w-4 mr-1" />
+      )}
+      {applicationsCount} Applications
+    </Button>
+  );
+};
+
 const StatsCard = ({
   icon: Icon,
   title,
@@ -157,62 +228,64 @@ const StatsCard = ({
   </Card>
 );
 
-// Компонент плейсхолдера при загрузке для карточек
-const ApartmentCardSkeleton = () => (
-  <Card className="overflow-hidden border-0 shadow-lg">
-    <Skeleton className="h-48 w-full" />
-    <CardHeader className="pb-2">
-      <Skeleton className="h-6 w-3/4 mb-2" />
-      <Skeleton className="h-4 w-1/2" />
-    </CardHeader>
-    <CardContent className="pb-2">
-      <div className="space-y-3">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-        <div className="flex space-x-2">
-          <Skeleton className="h-8 w-16" />
-          <Skeleton className="h-8 w-16" />
-          <Skeleton className="h-8 w-16" />
-        </div>
+const BeautifulLoading = () => (
+  // <div className="min-h-[60vh] flex items-center justify-center">
+  //   <div className="text-center space-y-6">
+  //     <div className="relative">
+  //       <div className="w-20 h-20 mx-auto">
+  //         <div className="absolute inset-0 rounded-full border-4 border-blue-100"></div>
+  //         <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
+  //         <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-purple-600 animate-spin animation-delay-75"></div>
+  //         <div className="absolute inset-4 rounded-full border-4 border-transparent border-t-indigo-600 animate-spin animation-delay-150"></div>
+  //       </div>
+
+  //       <div className="absolute inset-0 flex items-center justify-center">
+  //         <Building2 className="h-8 w-8 text-blue-600 animate-pulse" />
+  //       </div>
+  //     </div>
+
+  //     <div className="space-y-2">
+  //       <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+  //         Loading Your Properties
+  //       </h3>
+  //       <div className="flex items-center justify-center space-x-1">
+  //         <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+  //         <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce animation-delay-75"></div>
+  //         <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce animation-delay-150"></div>
+  //       </div>
+  //       <p className="text-gray-500 text-sm">
+  //         Fetching your apartment listings...
+  //       </p>
+  //     </div>
+
+  //     <div className="flex justify-center space-x-4 opacity-60">
+  //       <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg animate-pulse animation-delay-200 flex items-center justify-center">
+  //         <Home className="h-6 w-6 text-blue-500" />
+  //       </div>
+  //       <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg animate-pulse animation-delay-300 flex items-center justify-center">
+  //         <MapPin className="h-6 w-6 text-purple-500" />
+  //       </div>
+  //       <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-lg animate-pulse animation-delay-400 flex items-center justify-center">
+  //         <DollarSign className="h-6 w-6 text-indigo-500" />
+  //       </div>
+  //     </div>
+  //   </div>
+  // </div>
+  <div className="flex items-center justify-center">
+    <div className="text-center">
+      <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
-    </CardContent>
-  </Card>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        Loading Apartments
+      </h3>
+      <p className="text-gray-600">
+        Please wait while we fetch your apartments...
+      </p>
+    </div>
+  </div>
 );
 
-// Компонент плейсхолдера при загрузке для таблицы
-const TableRowSkeleton = () => (
-  <TableRow>
-    <TableCell>
-      <Skeleton className="h-12 w-16 rounded-lg" />
-    </TableCell>
-    <TableCell>
-      <Skeleton className="h-6 w-32" />
-    </TableCell>
-    <TableCell>
-      <Skeleton className="h-6 w-20 rounded-full" />
-    </TableCell>
-    <TableCell>
-      <Skeleton className="h-4 w-24" />
-    </TableCell>
-    <TableCell>
-      <Skeleton className="h-4 w-20" />
-    </TableCell>
-    <TableCell>
-      <Skeleton className="h-4 w-16" />
-    </TableCell>
-    <TableCell>
-      <Skeleton className="h-4 w-16" />
-    </TableCell>
-    <TableCell>
-      <Skeleton className="h-4 w-20" />
-    </TableCell>
-    <TableCell>
-      <Skeleton className="h-8 w-8 rounded-full" />
-    </TableCell>
-  </TableRow>
-);
-
-// Компонент строки таблицы для апартаментов
 const ApartmentTableRow = ({
   apartment,
   onDelete,
@@ -231,7 +304,7 @@ const ApartmentTableRow = ({
   }, [apartment]);
 
   const handleEdit = () => {
-    router.push(`/apartment/${apartment.apartmentId}`);
+    router.push(`/my-apartments/${apartment.apartmentId}`);
   };
 
   const handleDelete = async () => {
@@ -248,12 +321,18 @@ const ApartmentTableRow = ({
   };
 
   const handleViewDetails = () => {
-    router.push(`/apartment/${apartment.apartmentId}`);
+    router.push(`/my-apartments/${apartment.apartmentId}`);
   };
 
   return (
-    <TableRow className="hover:bg-blue-50/30 transition-colors border-b border-gray-100">
-      <TableCell className="py-4">
+    <TableRow className="hover:bg-blue-50/30 transition-colors border-0">
+      <TableCell className="py-4 border-0">
+        <ApplicationsButton
+          apartmentId={apartment.apartmentId || ""}
+          apartmentName={apartment.apartment_name}
+        />
+      </TableCell>
+      <TableCell className="py-4 border-0">
         <div className="h-12 w-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden shadow-sm">
           {mainImage ? (
             <img
@@ -268,7 +347,7 @@ const ApartmentTableRow = ({
           )}
         </div>
       </TableCell>
-      <TableCell className="py-4">
+      <TableCell className="py-4 border-0">
         <div className="flex flex-col space-y-1">
           <span
             className="font-semibold text-gray-900 truncate max-w-48"
@@ -282,7 +361,7 @@ const ApartmentTableRow = ({
           </span>
         </div>
       </TableCell>
-      <TableCell className="py-4">
+      <TableCell className="py-4 border-0">
         <div className="flex flex-col space-y-1">
           <Badge
             variant="outline"
@@ -302,35 +381,46 @@ const ApartmentTableRow = ({
           )}
         </div>
       </TableCell>
-      <TableCell className="py-4">
-        <span className="text-gray-700 font-medium">
-          {apartment.university_nearby || "Not specified"}
-        </span>
+      <TableCell className="py-4 border-0">
+        <div className="flex items-center text-gray-700">
+          <Bed className="h-4 w-4 mr-2 text-blue-500" />
+          <span className="font-medium">{apartment.number_of_rooms} rooms</span>
+        </div>
       </TableCell>
-      <TableCell className="py-4">
+      <TableCell className="py-4 border-0">
+        <div className="flex items-center text-gray-700">
+          <Ruler className="h-4 w-4 mr-2 text-green-500" />
+          <span className="font-medium">{apartment.area} m²</span>
+        </div>
+      </TableCell>
+      <TableCell className="py-4 border-0">
+        <div className="flex items-center text-gray-700">
+          <GraduationCap className="h-4 w-4 mr-2 text-purple-500" />
+          <span className="text-sm font-medium">
+            {apartment.university_nearby || "Not specified"}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="py-4 border-0">
         <span className="text-gray-600">
           {apartment.created_at ? formatDate(apartment.created_at) : "Recently"}
         </span>
       </TableCell>
-      <TableCell className="py-4">
+      <TableCell className="py-4 border-0">
         <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
           {formatPrice(apartment.price_per_month) || "N/A"}
         </span>
       </TableCell>
-      {/* <TableCell className="py-4">
-        <span className="text-gray-600 font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-          #{apartment.apartmentId?.toString().slice(-4) || "N/A"}
-        </span>
-      </TableCell> */}
-      <TableCell className="py-4">
+      <TableCell className="py-4 border-0">
         <span
           className="text-gray-600 truncate max-w-32"
           title={apartment.address.street}
         >
-          {apartment.address.street || "No Street Address"}
+          {`${apartment.address.street + "," + apartment.address.apartment_number}` ||
+            "No Street Address"}
         </span>
       </TableCell>
-      <TableCell className="py-4">
+      <TableCell className="py-4 border-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -353,7 +443,6 @@ const ApartmentTableRow = ({
               <Edit className="h-4 w-4 mr-2" />
               Edit Apartment
             </DropdownMenuItem>
-            {/* <DropdownMenuSeparator /> */}
             <DropdownMenuItem
               onClick={handleDelete}
               disabled={isDeleting}
@@ -372,9 +461,6 @@ const ApartmentTableRow = ({
     </TableRow>
   );
 };
-
-// Компонент карточки апартаментов (для grid view)
-// ЗАМЕНИТЕ существующий компонент ApartmentCard на этот:
 
 const ApartmentCard = ({
   apartment,
@@ -398,7 +484,7 @@ const ApartmentCard = ({
     : "Recently";
 
   const handleEdit = () => {
-    router.push(`/apartment/${apartment.apartmentId}`);
+    router.push(`/my-apartments/${apartment.apartmentId}`);
   };
 
   const handleDelete = async () => {
@@ -415,13 +501,12 @@ const ApartmentCard = ({
   };
 
   const handleViewDetails = () => {
-    router.push(`/apartment/${apartment.apartmentId}`);
+    router.push(`/my-apartments/${apartment.apartmentId}`);
   };
 
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group border-0 shadow-lg bg-white h-full">
       <div className="relative">
-        {/* Более высокое изображение */}
         <div className="h-64 w-full bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
           {mainImage ? (
             <img
@@ -434,11 +519,9 @@ const ApartmentCard = ({
               <Home className="h-20 w-20 text-blue-300" />
             </div>
           )}
-          {/* Градиентный оверлей */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
-        {/* Status Badges - улучшенное позиционирование */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
           {apartment.is_promoted && (
             <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg backdrop-blur-sm">
@@ -457,14 +540,12 @@ const ApartmentCard = ({
           </Badge>
         </div>
 
-        {/* Price Badge - более заметный */}
         <div className="absolute bottom-4 right-4">
           <Badge className="bg-white/95 backdrop-blur-sm text-blue-600 border-0 shadow-xl font-bold text-base px-4 py-2 rounded-lg">
             {formatPrice(apartment.price_per_month)}
           </Badge>
         </div>
 
-        {/* University badge */}
         {apartment.university_nearby && (
           <div className="absolute top-4 right-4">
             <Badge className="bg-purple-500/90 backdrop-blur-sm text-white border-0 shadow-lg text-xs px-2 py-1">
@@ -475,7 +556,6 @@ const ApartmentCard = ({
       </div>
 
       <CardContent className="p-6 flex flex-col flex-grow">
-        {/* Заголовок и адрес */}
         <div className="mb-4">
           <CardTitle
             className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]"
@@ -491,7 +571,6 @@ const ApartmentCard = ({
           </CardDescription>
         </div>
 
-        {/* Характеристики - улучшенная сетка */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="flex items-center text-sm text-gray-700 bg-blue-50 rounded-xl p-3 transition-colors hover:bg-blue-100">
             <Home className="h-5 w-5 mr-2 text-blue-500" />
@@ -533,26 +612,18 @@ const ApartmentCard = ({
           </div>
         </div>
 
-        {/* Дата публикации */}
         <div className="flex items-center text-xs text-gray-500 mb-6 bg-gray-50 rounded-lg p-2">
           <Clock className="h-4 w-4 mr-2" />
           <span>Posted on {createdAt}</span>
         </div>
 
-        {/* Разделитель */}
         <Separator className="mb-6" />
 
-        {/* Кнопки действий - улучшенный layout */}
         <div className="flex items-center justify-between gap-3 mt-auto">
-          <Button
-            variant="outline"
-            size="default"
-            onClick={handleViewDetails}
-            className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            View Details
-          </Button>
+          <ApplicationsButton
+            apartmentId={apartment.apartmentId || ""}
+            apartmentName={apartment.apartment_name}
+          />
 
           <div className="flex gap-2">
             <TooltipProvider>
@@ -598,7 +669,6 @@ const ApartmentCard = ({
   );
 };
 
-// Компонент пагинации
 const Pagination = ({
   currentPage,
   totalPages,
@@ -610,7 +680,7 @@ const Pagination = ({
 }) => {
   const getPageNumbers = () => {
     const pages = [];
-    const maxVisible = 5;
+    const maxVisible = 5; // Сократили до 5 максимум видимых страниц
 
     if (totalPages <= maxVisible) {
       for (let i = 1; i <= totalPages; i++) {
@@ -632,9 +702,9 @@ const Pagination = ({
       } else {
         pages.push(1);
         pages.push("...");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i);
-        }
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
         pages.push("...");
         pages.push(totalPages);
       }
@@ -646,142 +716,86 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center text-sm text-gray-600">
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
+    <div className="flex items-center justify-between px-2">
+      <div className="flex items-center text-sm text-gray-700">
+        <p>
+          Showing page <span className="font-medium">{currentPage}</span> of{" "}
+          <span className="font-medium">{totalPages}</span>
+        </p>
       </div>
 
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(1)}
+          disabled={currentPage <= 1}
+          className="hidden sm:flex h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 -ml-2" />
+        </Button>
+
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="h-9 w-9 p-0 border-gray-200 hover:bg-gray-50"
+          className="h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 disabled:opacity-50"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-        {getPageNumbers().map((page, index) => (
-          <div key={index}>
-            {page === "..." ? (
-              <span className="px-2 text-gray-400">...</span>
-            ) : (
-              <Button
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => onPageChange(page as number)}
-                className={`h-9 w-9 p-0 ${
-                  currentPage === page
-                    ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                    : "border-gray-200 hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </Button>
-            )}
-          </div>
-        ))}
+        <div className="flex items-center space-x-1">
+          {getPageNumbers().map((page, index) => (
+            <div key={index}>
+              {page === "..." ? (
+                <div className="flex h-8 w-8 items-center justify-center">
+                  <span className="text-gray-400 text-sm">...</span>
+                </div>
+              ) : (
+                <Button
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange(page as number)}
+                  className={`h-8 w-8 p-0 text-sm ${
+                    currentPage === page
+                      ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-sm"
+                      : "border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  {page}
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
 
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className="h-9 w-9 p-0 border-gray-200 hover:bg-gray-50"
+          className="h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 disabled:opacity-50"
         >
           <ChevronRight className="h-4 w-4" />
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage >= totalPages}
+          className="hidden sm:flex h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+        >
+          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 -ml-2" />
         </Button>
       </div>
     </div>
   );
 };
 
-const BeautifulLoading = () => (
-  <div className="min-h-[60vh] flex items-center justify-center">
-    <div className="text-center space-y-6">
-      <div className="relative">
-        <div className="w-20 h-20 mx-auto">
-          <div className="absolute inset-0 rounded-full border-4 border-blue-200"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
-          <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-purple-600 animate-spin animation-delay-75"></div>
-          <div className="absolute inset-4 rounded-full border-4 border-transparent border-t-indigo-600 animate-spin animation-delay-150"></div>
-        </div>
-
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Building2 className="h-8 w-8 text-blue-600 animate-pulse" />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-          Loading Your Properties
-        </h3>
-        <div className="flex items-center justify-center space-x-1">
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce animation-delay-75"></div>
-          <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce animation-delay-150"></div>
-        </div>
-        <p className="text-gray-500 text-sm">
-          Fetching your apartment listings...
-        </p>
-      </div>
-
-      <div className="flex justify-center space-x-4 opacity-60">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg animate-pulse animation-delay-200 flex items-center justify-center">
-          <Home className="h-6 w-6 text-blue-500" />
-        </div>
-        <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg animate-pulse animation-delay-300 flex items-center justify-center">
-          <MapPin className="h-6 w-6 text-purple-500" />
-        </div>
-        <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-lg animate-pulse animation-delay-400 flex items-center justify-center">
-          <DollarSign className="h-6 w-6 text-indigo-500" />
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const ImprovedApartmentCardSkeleton = () => (
-  <Card className="overflow-hidden border-0 shadow-lg h-full">
-    <div className="relative">
-      <div className="h-64 w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:400%_100%] animate-[shimmer_1.5s_ease-in-out_infinite]"></div>
-      <div className="absolute top-4 left-4 space-y-2">
-        <div className="w-20 h-6 bg-gray-300 rounded-full animate-pulse"></div>
-        <div className="w-16 h-6 bg-gray-300 rounded-full animate-pulse"></div>
-      </div>
-      <div className="absolute bottom-4 right-4">
-        <div className="w-24 h-8 bg-gray-300 rounded-lg animate-pulse"></div>
-      </div>
-    </div>
-    <CardContent className="p-6">
-      <div className="mb-4">
-        <div className="h-6 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:400%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded w-3/4 mb-2"></div>
-        <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:400%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded w-1/2"></div>
-      </div>
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="h-16 bg-gray-100 rounded-xl animate-pulse"
-            style={{ animationDelay: `${i * 100}ms` }}
-          ></div>
-        ))}
-      </div>
-      <div className="flex justify-between items-center gap-3">
-        <div className="h-10 bg-gray-200 rounded flex-1 animate-pulse"></div>
-        <div className="flex gap-2">
-          <div className="h-10 w-12 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-10 w-12 bg-gray-200 rounded animate-pulse animation-delay-75"></div>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-// Основная страница моих апартаментов
 export default function MyApartmentsPage() {
   const {
     profile,
@@ -797,16 +811,17 @@ export default function MyApartmentsPage() {
 
   const ownerId = profile?.userId;
 
-  // Состояния для управления UI
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [priceRangeFilter, setPriceRangeFilter] =
+    useState<PriceRangeFilter>("all");
+  const [roomsFilter, setRoomsFilter] = useState<RoomsFilter>("all");
   const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  // Запрос на получение апартаментов
   const {
     data: apartments,
     isLoading,
@@ -818,7 +833,10 @@ export default function MyApartmentsPage() {
     refetchOnWindowFocus: false,
   });
 
-  // Мутация для удаления апартаментов
+  useEffect(() => {
+    console.log("Apartments fetched:", apartments);
+  }, [apartments]);
+
   const deleteMutation = useDeleteApartment({
     onSuccess: () => {
       toast.success("🎉 Apartment successfully deleted!", {
@@ -838,10 +856,11 @@ export default function MyApartmentsPage() {
   useEffect(() => {
     console.log("Apartments data:", apartments);
   }, [apartments]);
-  // Фильтрация и сортировка апартаментов
+
   const filteredAndSortedApartments = apartments
     ? apartments
         .filter((apartment) => {
+          // Search filter - улучшенный поиск по имени
           const matchesSearch =
             apartment.apartment_name
               .toLowerCase()
@@ -856,6 +875,7 @@ export default function MyApartmentsPage() {
               .toLowerCase()
               .includes(searchQuery.toLowerCase());
 
+          // Status filter
           let matchesStatus = true;
           if (statusFilter === "active") matchesStatus = apartment.is_active;
           else if (statusFilter === "inactive")
@@ -863,7 +883,35 @@ export default function MyApartmentsPage() {
           else if (statusFilter === "promoted")
             matchesStatus = apartment.is_promoted;
 
-          return matchesSearch && matchesStatus;
+          // Price range filter
+          let matchesPriceRange = true;
+          if (priceRangeFilter === "under100k")
+            matchesPriceRange = apartment.price_per_month < 100000;
+          else if (priceRangeFilter === "100k-200k")
+            matchesPriceRange =
+              apartment.price_per_month >= 100000 &&
+              apartment.price_per_month < 200000;
+          else if (priceRangeFilter === "200k-300k")
+            matchesPriceRange =
+              apartment.price_per_month >= 200000 &&
+              apartment.price_per_month < 300000;
+          else if (priceRangeFilter === "over300k")
+            matchesPriceRange = apartment.price_per_month >= 300000;
+
+          // Rooms filter
+          let matchesRooms = true;
+          if (roomsFilter === "1")
+            matchesRooms = apartment.number_of_rooms === 1;
+          else if (roomsFilter === "2")
+            matchesRooms = apartment.number_of_rooms === 2;
+          else if (roomsFilter === "3")
+            matchesRooms = apartment.number_of_rooms === 3;
+          else if (roomsFilter === "4+")
+            matchesRooms = apartment.number_of_rooms >= 4;
+
+          return (
+            matchesSearch && matchesStatus && matchesPriceRange && matchesRooms
+          );
         })
         .sort((a, b) => {
           let aValue: any, bValue: any;
@@ -893,6 +941,14 @@ export default function MyApartmentsPage() {
               aValue = (a.university_nearby || "").toLowerCase();
               bValue = (b.university_nearby || "").toLowerCase();
               break;
+            case "number_of_rooms":
+              aValue = a.number_of_rooms;
+              bValue = b.number_of_rooms;
+              break;
+            case "area":
+              aValue = a.area;
+              bValue = b.area;
+              break;
             default:
               return 0;
           }
@@ -903,7 +959,6 @@ export default function MyApartmentsPage() {
         })
     : [];
 
-  // Статистика
   const stats = {
     total: apartments?.length || 0,
     active: apartments?.filter((apt) => apt.is_active).length || 0,
@@ -916,7 +971,6 @@ export default function MyApartmentsPage() {
       : 0,
   };
 
-  // Пагинация
   const totalPages = Math.ceil(
     filteredAndSortedApartments.length / itemsPerPage,
   );
@@ -926,10 +980,17 @@ export default function MyApartmentsPage() {
     startIndex + itemsPerPage,
   );
 
-  // Сброс текущей страницы при изменении фильтров
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter, sortField, sortOrder, itemsPerPage]);
+  }, [
+    searchQuery,
+    statusFilter,
+    priceRangeFilter,
+    roomsFilter,
+    sortField,
+    sortOrder,
+    itemsPerPage,
+  ]);
 
   const handleDelete = (apartmentId: string) => {
     if (
@@ -959,6 +1020,13 @@ export default function MyApartmentsPage() {
     );
   };
 
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setPriceRangeFilter("all");
+    setRoomsFilter("all");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
       <ToastContainer
@@ -976,7 +1044,6 @@ export default function MyApartmentsPage() {
 
       <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-2">
               <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
@@ -988,7 +1055,7 @@ export default function MyApartmentsPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Link href="/apartment/create">
+              <Link href="/my-apartments/create">
                 <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2.5">
                   <Plus className="h-5 w-5 mr-2" />
                   Add New Property
@@ -1000,7 +1067,6 @@ export default function MyApartmentsPage() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
         {!isLoading && apartments && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
             <StatsCard
@@ -1030,60 +1096,122 @@ export default function MyApartmentsPage() {
           </div>
         )}
 
-        {/* Controls */}
         <Card className="mb-8 border-0 shadow-lg">
           <CardContent className="p-6">
-            <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-              <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full xl:w-auto">
-                {/* Search */}
+            <div className="flex flex-col space-y-4">
+              {/* First row - Search */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
                 <div className="relative flex-1 min-w-0 max-w-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <Input
-                    placeholder="Search properties..."
+                    placeholder="Search by property name..."
                     className="pl-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500 bg-white h-11"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
 
-                {/* Filters */}
-                <div className="flex gap-3">
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(value: StatusFilter) =>
-                      setStatusFilter(value)
-                    }
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={clearAllFilters}
+                    className="border-gray-200 hover:bg-gray-50 h-10 px-4"
                   >
-                    <SelectTrigger className="w-full sm:w-40 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11">
-                      <SelectValue placeholder="All Status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active Only</SelectItem>
-                      <SelectItem value="inactive">Inactive Only</SelectItem>
-                      <SelectItem value="promoted">Featured Only</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <X className="h-4 w-4 mr-2" />
+                    Clear Filters
+                  </Button>
 
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={(value) => setItemsPerPage(Number(value))}
-                  >
-                    <SelectTrigger className="w-full sm:w-32 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="5">5 per page</SelectItem>
-                      <SelectItem value="10">10 per page</SelectItem>
-                      <SelectItem value="25">25 per page</SelectItem>
-                      <SelectItem value="50">50 per page</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                    <Button
+                      variant={viewMode === "table" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("table")}
+                      className={`h-9 px-3 ${viewMode === "table" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === "grid" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("grid")}
+                      className={`h-9 px-3 ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
+                    >
+                      <Grid3X3 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              {/* View Mode Toggle & Sort */}
-              <div className="flex items-center gap-3">
+              {/* Second row - Filters */}
+              <div className="flex flex-wrap gap-3">
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value: StatusFilter) =>
+                    setStatusFilter(value)
+                  }
+                >
+                  <SelectTrigger className="w-40 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active Only</SelectItem>
+                    <SelectItem value="inactive">Inactive Only</SelectItem>
+                    <SelectItem value="promoted">Featured Only</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={priceRangeFilter}
+                  onValueChange={(value: PriceRangeFilter) =>
+                    setPriceRangeFilter(value)
+                  }
+                >
+                  <SelectTrigger className="w-40 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Price Range" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All Prices</SelectItem>
+                    <SelectItem value="under100k">Under 100k ₸</SelectItem>
+                    <SelectItem value="100k-200k">100k - 200k ₸</SelectItem>
+                    <SelectItem value="200k-300k">200k - 300k ₸</SelectItem>
+                    <SelectItem value="over300k">Over 300k ₸</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={roomsFilter}
+                  onValueChange={(value: RoomsFilter) => setRoomsFilter(value)}
+                >
+                  <SelectTrigger className="w-40 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10">
+                    <Bed className="h-1 w-1" />
+                    <SelectValue placeholder="Rooms" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All Rooms</SelectItem>
+                    <SelectItem value="1">1 Room</SelectItem>
+                    <SelectItem value="2">2 Rooms</SelectItem>
+                    <SelectItem value="3">3 Rooms</SelectItem>
+                    <SelectItem value="4+">4+ Rooms</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => setItemsPerPage(Number(value))}
+                >
+                  <SelectTrigger className="w-32 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="1">1 per page</SelectItem>
+                    <SelectItem value="5">5 per page</SelectItem>
+                    <SelectItem value="10">10 per page</SelectItem>
+                    <SelectItem value="15">15 per page</SelectItem>
+                  </SelectContent>
+                </Select>
+
                 <Select
                   value={`${sortField}-${sortOrder}`}
                   onValueChange={(value) => {
@@ -1092,7 +1220,7 @@ export default function MyApartmentsPage() {
                     setSortOrder(order as SortOrder);
                   }}
                 >
-                  <SelectTrigger className="w-40 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-11">
+                  <SelectTrigger className="w-40 border-gray-200 focus:border-blue-500 focus:ring-blue-500 h-10">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
@@ -1104,148 +1232,57 @@ export default function MyApartmentsPage() {
                     <SelectItem value="name-desc">Name Z-A</SelectItem>
                     <SelectItem value="price-asc">Price Low-High</SelectItem>
                     <SelectItem value="price-desc">Price High-Low</SelectItem>
+                    <SelectItem value="number_of_rooms-asc">
+                      Rooms Low-High
+                    </SelectItem>
+                    <SelectItem value="number_of_rooms-desc">
+                      Rooms High-Low
+                    </SelectItem>
+                    <SelectItem value="area-asc">Area Small-Large</SelectItem>
+                    <SelectItem value="area-desc">Area Large-Small</SelectItem>
                   </SelectContent>
                 </Select>
-
-                <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                  <Button
-                    variant={viewMode === "table" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("table")}
-                    className={`h-9 px-3 ${viewMode === "table" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                    className={`h-9 px-3 ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
-            </div>
 
-            {/* Results info */}
-            {isLoading && (
-              <div className="space-y-6">
-                {/* Основной красивый лоадинг */}
-                <BeautifulLoading />
-
-                {/* Опционально: показать скелетоны под основным лоадингом */}
-                <div className="opacity-30">
-                  {viewMode === "grid" ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {[...Array(4)].map((_, index) => (
-                        <ImprovedApartmentCardSkeleton key={index} />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card className="border-0 shadow-lg">
-                      <CardContent className="p-0">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-gray-50/50 border-b border-gray-100">
-                              <TableHead className="font-semibold text-gray-700">
-                                Image
-                              </TableHead>
-                              <TableHead className="font-semibold text-gray-700">
-                                Property
-                              </TableHead>
-                              <TableHead className="font-semibold text-gray-700">
-                                Status
-                              </TableHead>
-                              <TableHead className="font-semibold text-gray-700">
-                                University Nearby
-                              </TableHead>
-                              <TableHead className="font-semibold text-gray-700">
-                                Published
-                              </TableHead>
-                              <TableHead className="font-semibold text-gray-700">
-                                Price
-                              </TableHead>
-                              <TableHead className="font-semibold text-gray-700">
-                                Address
-                              </TableHead>
-                              <TableHead className="font-semibold text-gray-700">
-                                Actions
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {[...Array(3)].map((_, index) => (
-                              <TableRowSkeleton key={index} />
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
+              {/* Filter summary */}
+              {(searchQuery ||
+                statusFilter !== "all" ||
+                priceRangeFilter !== "all" ||
+                roomsFilter !== "all") && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                  <Filter className="h-4 w-4 text-blue-500" />
+                  <span className="font-medium">Active filters:</span>
+                  {searchQuery && (
+                    <Badge variant="outline" className="bg-white">
+                      Name: "{searchQuery}"
+                    </Badge>
                   )}
+                  {statusFilter !== "all" && (
+                    <Badge variant="outline" className="bg-white">
+                      Status: {statusFilter}
+                    </Badge>
+                  )}
+                  {priceRangeFilter !== "all" && (
+                    <Badge variant="outline" className="bg-white">
+                      Price: {priceRangeFilter}
+                    </Badge>
+                  )}
+                  {roomsFilter !== "all" && (
+                    <Badge variant="outline" className="bg-white">
+                      Rooms: {roomsFilter}
+                    </Badge>
+                  )}
+                  <span className="ml-2 font-medium text-blue-600">
+                    {filteredAndSortedApartments.length} results
+                  </span>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        {/* Content */}
         <div className="space-y-6">
-          {isLoading && (
-            <div>
-              {viewMode === "grid" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {[...Array(8)].map((_, index) => (
-                    <ApartmentCardSkeleton key={index} />
-                  ))}
-                </div>
-              ) : (
-                <Card className="border-0 shadow-lg">
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50/50 border-b border-gray-100">
-                          <TableHead className="font-semibold text-gray-700">
-                            Image
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Property
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Status
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            University Nearby
-                          </TableHead>
-
-                          <TableHead className="font-semibold text-gray-700">
-                            Published
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Price
-                          </TableHead>
-                          {/* <TableHead className="font-semibold text-gray-700">
-                            ID
-                          </TableHead> */}
-                          <TableHead className="font-semibold text-gray-700">
-                            Address
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Actions
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {[...Array(5)].map((_, index) => (
-                          <TableRowSkeleton key={index} />
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+          {isLoading && <BeautifulLoading />}
 
           {isError && (
             <Card className="border-0 shadow-lg">
@@ -1321,10 +1358,7 @@ export default function MyApartmentsPage() {
                     </p>
                     <Button
                       variant="outline"
-                      onClick={() => {
-                        setSearchQuery("");
-                        setStatusFilter("all");
-                      }}
+                      onClick={clearAllFilters}
                       className="border-gray-200 hover:bg-gray-50"
                     >
                       Clear All Filters
@@ -1352,33 +1386,54 @@ export default function MyApartmentsPage() {
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-gray-50/50 border-b border-gray-100 hover:bg-gray-50/50">
-                            <TableHead className="font-semibold text-gray-700 w-20">
+                          <TableRow className="bg-gray-50/50 border-0 hover:bg-gray-50/50">
+                            <TableHead className="font-semibold text-gray-700 w-20 border-0">
+                              Applications
+                            </TableHead>
+                            <TableHead className="font-semibold text-gray-700 w-20 border-0">
                               Image
                             </TableHead>
                             <TableHead
-                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
+                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors border-0"
                               onClick={() => handleSort("name")}
                             >
                               <div className="flex items-center space-x-1">
-                                <span>Property</span>
+                                <span>Property Name</span>
                                 {getSortIcon("name")}
                               </div>
                             </TableHead>
-                            <TableHead className="font-semibold text-gray-700">
+                            <TableHead className="font-semibold text-gray-700 border-0">
                               Status
                             </TableHead>
                             <TableHead
-                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
+                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors border-0"
+                              onClick={() => handleSort("number_of_rooms")}
+                            >
+                              <div className="flex items-center space-x-1">
+                                <span>Rooms</span>
+                                {getSortIcon("number_of_rooms")}
+                              </div>
+                            </TableHead>
+                            <TableHead
+                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors border-0"
+                              onClick={() => handleSort("area")}
+                            >
+                              <div className="flex items-center space-x-1">
+                                <span>Area</span>
+                                {getSortIcon("area")}
+                              </div>
+                            </TableHead>
+                            <TableHead
+                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors border-0"
                               onClick={() => handleSort("university_nearby")}
                             >
                               <div className="flex items-center space-x-1">
-                                <span>University Nearby</span>
+                                <span>University</span>
                                 {getSortIcon("university_nearby")}
                               </div>
                             </TableHead>
                             <TableHead
-                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
+                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors border-0"
                               onClick={() => handleSort("created_at")}
                             >
                               <div className="flex items-center space-x-1">
@@ -1387,7 +1442,7 @@ export default function MyApartmentsPage() {
                               </div>
                             </TableHead>
                             <TableHead
-                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors"
+                              className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100/50 transition-colors border-0"
                               onClick={() => handleSort("price")}
                             >
                               <div className="flex items-center space-x-1">
@@ -1395,13 +1450,10 @@ export default function MyApartmentsPage() {
                                 {getSortIcon("price")}
                               </div>
                             </TableHead>
-                            {/* <TableHead className="font-semibold text-gray-700">
-                              ID
-                            </TableHead> */}
-                            <TableHead className="font-semibold text-gray-700">
+                            <TableHead className="font-semibold text-gray-700 border-0">
                               Address
                             </TableHead>
-                            <TableHead className="font-semibold text-gray-700 w-16">
+                            <TableHead className="font-semibold text-gray-700 w-16 border-0">
                               Actions
                             </TableHead>
                           </TableRow>
@@ -1421,7 +1473,6 @@ export default function MyApartmentsPage() {
                 </Card>
               )}
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <Card className="border-0 shadow-lg">
                   <CardContent className="px-6 py-4">
@@ -1440,30 +1491,3 @@ export default function MyApartmentsPage() {
     </div>
   );
 }
-
-const shimmerStyles = `
-@keyframes shimmer {
-  0% { background-position: -400% 0; }
-  100% { background-position: 400% 0; }
-}
-
-.animation-delay-75 {
-  animation-delay: 75ms;
-}
-
-.animation-delay-150 {
-  animation-delay: 150ms;
-}
-
-.animation-delay-200 {
-  animation-delay: 200ms;
-}
-
-.animation-delay-300 {
-  animation-delay: 300ms;
-}
-
-.animation-delay-400 {
-  animation-delay: 400ms;
-}
-`;

@@ -125,7 +125,7 @@ export default function RegisterPage() {
         console.log("JWT Token saved (register):", session.rawToken);
       }
 
-      router.push("/profile");
+      router.push("/addProfile");
     } catch (err: any) {
       toast.error(err.message);
     } finally {

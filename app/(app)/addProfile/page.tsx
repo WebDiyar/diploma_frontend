@@ -5,7 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Upload, Check, User } from "lucide-react";
+import {
+  Loader2,
+  Upload,
+  Check,
+  User,
+  Plus,
+  X,
+  Trash2,
+  CheckCircle,
+  MessageCircle,
+  Badge,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,13 +33,12 @@ import Cookies from "js-cookie";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-// Zod schema for complete profile validation
+// Zod schema for profile validation
 const profileSchema = z.object({
-  name: z.string().min(1, "First name is required"),
   surname: z.string().min(1, "Last name is required"),
   gender: z.string().min(1, "Gender is required"),
-  email: z.string().email("Valid email is required"),
   phone: z.string().min(1, "Phone number is required"),
   nationality: z.string().min(1, "Nationality is required"),
   city: z.string().min(1, "City is required"),
@@ -66,31 +76,15 @@ const profileSchema = z.object({
       },
     ),
   avatar_url: z.string().min(1, "Profile picture is required"),
-  id_document_url: z.string().min(1, "ID document is required"),
   is_landlord: z.boolean(),
 });
 
-const budgetRangeSchema = z
-  .object({
-    min: z.number().nonnegative(),
-    max: z
-      .number()
-      .nonnegative()
-      .refine((val) => val > 0, {
-        message: "Maximum value must be greater than 0",
-      }),
-  })
-  .refine((data) => !data.min || !data.max || data.max >= data.min, {
-    message: "Maximum value must be greater than minimum value",
-    path: ["max"],
-  });
-
-export default function ProfileSetupPage() {
+export default function AddProfilePage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [idDocumentPreview, setIdDocumentPreview] = useState<string | null>(
-    null,
-  );
+  const [newLanguageItem, setNewLanguageItem] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const [formData, setFormData] = useState<any>({
     name: "",
     surname: "",
@@ -114,15 +108,22 @@ export default function ProfileSetupPage() {
       whatsapp: "",
     },
     avatar_url: "",
-    id_document_url: "",
     is_landlord: false,
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const idDocumentInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
+    // Prevent going back
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      history.pushState(null, "", window.location.href);
+    };
+
+    history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+
     const token = Cookies.get("jwt_token");
 
     if (!token) {
@@ -137,7 +138,7 @@ export default function ProfileSetupPage() {
         const data = await getUserProfile();
         console.log("Profile fetched successfully:", data);
 
-        // Only pre-fill name and email (which will be disabled)
+        // Pre-fill name and email from existing profile
         if (data) {
           setFormData((prev: any) => ({
             ...prev,
@@ -151,34 +152,35 @@ export default function ProfileSetupPage() {
     };
 
     fetchProfile();
-  }, []);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [router]);
 
   const updateField = (field: string, value: any) => {
     setFormData((prev: any) => ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error when field is updated
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleBudgetChange = (type: "min" | "max", value: string) => {
     const numValue = value === "" ? undefined : Number(value);
-
     const newBudget = {
       ...formData.budget_range,
       [type]: numValue,
     };
-
     updateField("budget_range", newBudget);
-
-    try {
-      if (newBudget.min !== undefined && newBudget.max !== undefined) {
-        budgetRangeSchema.parse(newBudget);
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      }
-    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,46 +196,34 @@ export default function ProfileSetupPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleIdDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const fileType = file.type;
-    if (
-      fileType !== "application/pdf" &&
-      fileType !==
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
-      toast.error("Please upload a PDF or DOCX file");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setIdDocumentPreview(base64String);
-      updateField("id_document_url", base64String);
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handleAvatarUploadClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleIdDocumentUploadClick = () => {
-    idDocumentInputRef.current?.click();
+  const handleAddLanguage = () => {
+    if (!newLanguageItem.trim()) return;
+
+    const currentLanguages = formData.language_preferences || [];
+    if (currentLanguages.includes(newLanguageItem.trim())) {
+      toast.error("This language is already in the list");
+      return;
+    }
+
+    updateField("language_preferences", [
+      ...currentLanguages,
+      newLanguageItem.trim(),
+    ]);
+    setNewLanguageItem("");
   };
 
-  const handleLanguagePreferencesChange = (value: string) => {
-    const languages = value
-      .split(",")
-      .map((lang) => lang.trim())
-      .filter(Boolean);
-    updateField("language_preferences", languages);
+  const handleRemoveLanguage = (index: number) => {
+    const currentLanguages = formData.language_preferences || [];
+    const newLanguages = [...currentLanguages];
+    newLanguages.splice(index, 1);
+    updateField("language_preferences", newLanguages);
   };
 
-  const validateAllFields = () => {
+  const validateForm = () => {
     try {
       // Prepare data for validation
       const dataToValidate = {
@@ -244,28 +234,28 @@ export default function ProfileSetupPage() {
         },
       };
 
-      const isValidation: any = profileSchema.parse(dataToValidate);
-      console.log("Validation resultsssss:", isValidation.isValid);
-
-      return isValidation;
+      profileSchema.parse(dataToValidate);
+      setErrors({});
+      return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const missingFields = error.errors.map((err) => err.message);
-        return { isValid: false, errors: missingFields };
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          const path = err.path.join(".");
+          newErrors[path] = err.message;
+        });
+        setErrors(newErrors);
+
+        // Show first error in toast
+        toast.error(error.errors[0].message);
+        return false;
       }
-      return { isValid: false, errors: ["Validation failed"] };
+      return false;
     }
   };
-  const handleSubmitProfile = async () => {
-    // Validate all fields before submission
-    console.log("Validating profile data...");
-    const validation = validateAllFields();
-    console.log("Validation result:", validation);
 
-    if (validation.length === 1) {
-      toast.success(`Successfully submitted profile!`);
-    } else if (validation.errors && validation.isValid === false) {
-      toast.error(`Please fill in all required fields`);
+  const handleSubmitProfile = async () => {
+    if (!validateForm()) {
       return;
     }
 
@@ -280,9 +270,14 @@ export default function ProfileSetupPage() {
       const updatedData = await updateUserProfile(dataToSend);
       console.log("Profile submitted successfully:", updatedData);
 
-      toast.success("Profile submitted successfully!");
+      toast.success("Profile completed successfully!", {
+        position: "top-right",
+        autoClose: 2000,
+      });
 
       setTimeout(() => {
+        // Replace current history entry instead of pushing new one
+        window.history.replaceState(null, "", "/profile");
         router.push("/profile");
       }, 2000);
     } catch (error) {
@@ -298,14 +293,23 @@ export default function ProfileSetupPage() {
     }
   };
 
+  const getFieldError = (fieldName: string) => {
+    return errors[fieldName];
+  };
+
+  const isFieldError = (fieldName: string) => {
+    return !!errors[fieldName];
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen py-8">
       <ToastContainer />
+
       {isSaving && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-3" />
-            <p className="text-gray-700">Submitting profile...</p>
+            <p className="text-gray-700">Completing your profile...</p>
           </div>
         </div>
       )}
@@ -333,15 +337,11 @@ export default function ProfileSetupPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name *
+                      First Name (from account)
                     </label>
-                    <Input
-                      value={formData.name || ""}
-                      onChange={(e) => updateField("name", e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter your first name"
-                      disabled
-                    />
+                    <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800 border">
+                      {formData.name || "Not provided"}
+                    </div>
                   </div>
 
                   <div>
@@ -351,9 +351,18 @@ export default function ProfileSetupPage() {
                     <Input
                       value={formData.surname || ""}
                       onChange={(e) => updateField("surname", e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("surname")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="Enter your last name"
                     />
+                    {getFieldError("surname") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("surname")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -364,7 +373,11 @@ export default function ProfileSetupPage() {
                       value={formData.gender || ""}
                       onValueChange={(value) => updateField("gender", value)}
                     >
-                      <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectTrigger
+                        className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                          isFieldError("gender") ? "border-red-500" : ""
+                        }`}
+                      >
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
@@ -373,20 +386,20 @@ export default function ProfileSetupPage() {
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
+                    {getFieldError("gender") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("gender")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address *
+                      Email Address (from account)
                     </label>
-                    <Input
-                      type="email"
-                      value={formData.email || ""}
-                      onChange={(e) => updateField("email", e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter your email"
-                      disabled
-                    />
+                    <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800 border">
+                      {formData.email || "Not provided"}
+                    </div>
                   </div>
 
                   <div>
@@ -397,9 +410,18 @@ export default function ProfileSetupPage() {
                       type="tel"
                       value={formData.phone || ""}
                       onChange={(e) => updateField("phone", e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("phone")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="Enter your phone number"
                     />
+                    {getFieldError("phone") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("phone")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -412,7 +434,11 @@ export default function ProfileSetupPage() {
                         updateField("nationality", value)
                       }
                     >
-                      <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectTrigger
+                        className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                          isFieldError("nationality") ? "border-red-500" : ""
+                        }`}
+                      >
                         <SelectValue placeholder="Select nationality" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
@@ -422,6 +448,11 @@ export default function ProfileSetupPage() {
                         <SelectItem value="Other">🌍 Other</SelectItem>
                       </SelectContent>
                     </Select>
+                    {getFieldError("nationality") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("nationality")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -431,9 +462,18 @@ export default function ProfileSetupPage() {
                     <Input
                       value={formData.city || ""}
                       onChange={(e) => updateField("city", e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("city")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="Enter your city"
                     />
+                    {getFieldError("city") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("city")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -443,9 +483,18 @@ export default function ProfileSetupPage() {
                     <Input
                       value={formData.country || ""}
                       onChange={(e) => updateField("country", e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("country")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="Enter your country"
                     />
+                    {getFieldError("country") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("country")}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -460,7 +509,13 @@ export default function ProfileSetupPage() {
 
                 <div className="flex flex-col items-center">
                   <div className="relative mb-6">
-                    <Avatar className="h-32 w-32 border-4 border-blue-100">
+                    <Avatar
+                      className={`h-32 w-32 border-4 ${
+                        isFieldError("avatar_url")
+                          ? "border-red-200"
+                          : "border-blue-100"
+                      }`}
+                    >
                       <AvatarImage
                         src={avatarPreview || ""}
                         alt="Profile picture"
@@ -493,6 +548,12 @@ export default function ProfileSetupPage() {
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Profile Picture
                   </Button>
+
+                  {getFieldError("avatar_url") && (
+                    <p className="text-red-500 text-sm mt-2">
+                      {getFieldError("avatar_url")}
+                    </p>
+                  )}
                 </div>
               </div>
             </Card>
@@ -509,14 +570,78 @@ export default function ProfileSetupPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       University *
                     </label>
-                    <Input
+                    <Select
                       value={formData.university || ""}
-                      onChange={(e) =>
-                        updateField("university", e.target.value)
+                      onValueChange={(value) =>
+                        updateField("university", value)
                       }
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter your university"
-                    />
+                    >
+                      <SelectTrigger
+                        className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                          isFieldError("university") ? "border-red-500" : ""
+                        }`}
+                      >
+                        <SelectValue placeholder="Select university" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        <SelectItem value="Astana IT University">
+                          Astana IT University (AITU)
+                        </SelectItem>
+                        <SelectItem value="Nazarbayev University">
+                          Nazarbayev University
+                        </SelectItem>
+                        <SelectItem value="L.N. Gumilyov Eurasian National University">
+                          L.N. Gumilyov Eurasian National University
+                        </SelectItem>
+                        <SelectItem value="S. Seifullin Kazakh Agro Technical University">
+                          S. Seifullin Kazakh Agro Technical University
+                        </SelectItem>
+                        <SelectItem value="Astana Medical University">
+                          Astana Medical University
+                        </SelectItem>
+                        <SelectItem value="Kazakh University of Economics, Finance and International Trade">
+                          Kazakh University of Economics, Finance and
+                          International Trade
+                        </SelectItem>
+                        <SelectItem value="Maqsut Narikbayev University">
+                          Maqsut Narikbayev University (KAZGUU)
+                        </SelectItem>
+                        <SelectItem value="Eurasian Humanities Institute">
+                          Eurasian Humanities Institute
+                        </SelectItem>
+                        <SelectItem value="Academy of Public Administration under the President of Kazakhstan">
+                          Academy of Public Administration under the President
+                          of Kazakhstan
+                        </SelectItem>
+                        <SelectItem value="Kazakh University of Technology and Business">
+                          Kazakh University of Technology and Business
+                        </SelectItem>
+                        <SelectItem value="Turan-Astana University">
+                          Turan-Astana University
+                        </SelectItem>
+                        <SelectItem value="Astana University">
+                          Astana University
+                        </SelectItem>
+                        <SelectItem value="Kazakh National University of Arts">
+                          Kazakh National University of Arts
+                        </SelectItem>
+                        <SelectItem value="Esil University">
+                          Esil University
+                        </SelectItem>
+                        <SelectItem value="Astana International University">
+                          Astana International University (AIU)
+                        </SelectItem>
+                        <SelectItem value="Moscow State University Branch in Kazakhstan">
+                          Moscow State University Branch in Kazakhstan
+                        </SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {getFieldError("university") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("university")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -528,9 +653,18 @@ export default function ProfileSetupPage() {
                       onChange={(e) =>
                         updateField("studentId_number", e.target.value)
                       }
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("studentId_number")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="Enter your student ID"
                     />
+                    {getFieldError("studentId_number") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("studentId_number")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -540,9 +674,18 @@ export default function ProfileSetupPage() {
                     <Input
                       value={formData.group || ""}
                       onChange={(e) => updateField("group", e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("group")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="Enter your group"
                     />
+                    {getFieldError("group") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("group")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -555,8 +698,17 @@ export default function ProfileSetupPage() {
                       onChange={(e) =>
                         updateField("birth_date", e.target.value)
                       }
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("birth_date")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                     />
+                    {getFieldError("birth_date") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("birth_date")}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -577,9 +729,18 @@ export default function ProfileSetupPage() {
                     <Textarea
                       value={formData.bio || ""}
                       onChange={(e) => updateField("bio", e.target.value)}
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-24"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-24 ${
+                        isFieldError("bio")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="Tell us about yourself..."
                     />
+                    {getFieldError("bio") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("bio")}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -591,123 +752,18 @@ export default function ProfileSetupPage() {
                       onChange={(e) =>
                         updateField("roommate_preferences", e.target.value)
                       }
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-16"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-16 ${
+                        isFieldError("roommate_preferences")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="Share your roommate preferences..."
                     />
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Document Verification */}
-            <Card className="shadow-md border-blue-100">
-              <div className="p-6 bg-white">
-                <h2 className="text-xl font-semibold text-gray-800 mb-6">
-                  Document Verification *
-                </h2>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ID Document (PDF or DOCX only) *
-                  </label>
-
-                  <div className="flex flex-col space-y-4">
-                    {idDocumentPreview ? (
-                      <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
-                        <div className="flex flex-col items-center">
-                          {(() => {
-                            if (
-                              idDocumentPreview.includes("data:application/pdf")
-                            ) {
-                              return (
-                                <div className="flex flex-col items-center">
-                                  <div className="bg-rose-100 text-rose-700 p-3 rounded-full mb-2">
-                                    <svg
-                                      className="h-8 w-8"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  </div>
-                                  <p className="text-sm text-gray-700">
-                                    PDF Document Uploaded
-                                  </p>
-                                </div>
-                              );
-                            } else if (
-                              idDocumentPreview.includes(
-                                "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                              )
-                            ) {
-                              return (
-                                <div className="flex flex-col items-center">
-                                  <div className="bg-blue-100 text-blue-700 p-3 rounded-full mb-2">
-                                    <svg
-                                      className="h-8 w-8"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  </div>
-                                  <p className="text-sm text-gray-700">
-                                    DOCX Document Uploaded
-                                  </p>
-                                </div>
-                              );
-                            }
-                            return (
-                              <div className="flex flex-col items-center">
-                                <div className="bg-gray-100 text-gray-700 p-3 rounded-full mb-2">
-                                  <svg
-                                    className="h-8 w-8"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                </div>
-                                <p className="text-sm text-gray-700">
-                                  Document Uploaded
-                                </p>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 px-3 py-6 rounded-md text-gray-500 text-center border border-gray-200">
-                        No ID document uploaded
-                      </div>
+                    {getFieldError("roommate_preferences") && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getFieldError("roommate_preferences")}
+                      </p>
                     )}
-
-                    <Button
-                      onClick={handleIdDocumentUploadClick}
-                      className="bg-blue-600 hover:bg-blue-700 w-full"
-                    >
-                      <Upload className="w-5 h-5 mr-2" />
-                      Upload ID Document (PDF or DOCX)
-                    </Button>
-                    <input
-                      type="file"
-                      ref={idDocumentInputRef}
-                      className="hidden"
-                      accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      onChange={handleIdDocumentChange}
-                    />
                   </div>
                 </div>
               </div>
@@ -715,19 +771,20 @@ export default function ProfileSetupPage() {
 
             {/* Housing Preferences */}
             <Card className="shadow-md border-blue-100">
-              <div className="p-6 bg-white">
-                <h2 className="text-xl font-semibold text-gray-800 mb-6">
+              <div className="p-8 bg-white">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-8">
                   Housing Preferences
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-8">
+                  {/* Budget Range Section */}
+                  <div className="p-6 rounded-xl border border-blue-100">
+                    <label className="block text-lg font-semibold text-gray-800 mb-4">
                       Budget Range (KZT) *
                     </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-600 block">
                           Minimum Budget
                         </label>
                         <Input
@@ -736,12 +793,16 @@ export default function ProfileSetupPage() {
                           onChange={(e) =>
                             handleBudgetChange("min", e.target.value)
                           }
-                          className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="0"
+                          className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-lg py-3 ${
+                            isFieldError("budget_range.min")
+                              ? "border-red-500 focus:border-red-500"
+                              : ""
+                          }`}
+                          placeholder="Enter minimum budget"
                         />
                       </div>
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-600 block">
                           Maximum Budget
                         </label>
                         <Input
@@ -750,29 +811,100 @@ export default function ProfileSetupPage() {
                           onChange={(e) =>
                             handleBudgetChange("max", e.target.value)
                           }
-                          className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="0"
+                          className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-lg py-3 ${
+                            isFieldError("budget_range.max")
+                              ? "border-red-500 focus:border-red-500"
+                              : ""
+                          }`}
+                          placeholder="Enter maximum budget"
                         />
                       </div>
                     </div>
+                    {(getFieldError("budget_range") ||
+                      getFieldError("budget_range.max")) && (
+                      <p className="text-red-500 text-sm mt-2">
+                        {getFieldError("budget_range") ||
+                          getFieldError("budget_range.max")}
+                      </p>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Language Preferences *
-                    </label>
-                    <Input
-                      value={
-                        Array.isArray(formData.language_preferences)
-                          ? formData.language_preferences.join(", ")
-                          : ""
-                      }
-                      onChange={(e) =>
-                        handleLanguagePreferencesChange(e.target.value)
-                      }
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="e.g. English, Russian, Kazakh (separate with commas)"
-                    />
+                  {/* Language Preferences Section */}
+                  <div className="p-6 rounded-xl border border-purple-100">
+                    <div className="flex items-center justify-between mb-6">
+                      <label className="block text-lg font-semibold text-gray-800">
+                        Language Preferences *
+                      </label>
+                      <Badge className="border-purple-200 bg-purple-50">
+                        Add your preferred languages
+                      </Badge>
+                    </div>
+
+                    <div className="flex gap-3 mb-6">
+                      <Input
+                        placeholder="Add language (e.g., English, Russian, Kazakh)"
+                        value={newLanguageItem}
+                        onChange={(e) => setNewLanguageItem(e.target.value)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleAddLanguage()
+                        }
+                        className={`border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-lg py-3 ${
+                          isFieldError("language_preferences")
+                            ? "border-red-500 focus:border-red-500"
+                            : ""
+                        }`}
+                      />
+                      <Button
+                        onClick={handleAddLanguage}
+                        className="bg-purple-600 hover:bg-purple-700 px-6 py-3"
+                      >
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {formData.language_preferences.map(
+                        (language: string, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-white p-4 rounded-xl border border-purple-100 shadow-sm"
+                          >
+                            <div className="flex items-center">
+                              <CheckCircle className="h-5 w-5 text-purple-500 mr-3" />
+                              <span className="font-semibold text-gray-800 text-lg">
+                                {language}
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveLanguage(index)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ),
+                      )}
+                    </div>
+
+                    {!formData.language_preferences?.length && (
+                      <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-purple-200">
+                        <MessageCircle className="h-12 w-12 text-purple-300 mx-auto mb-4" />
+                        <p className="text-gray-500 text-lg">
+                          No languages added yet
+                        </p>
+                        <p className="text-sm text-gray-400 mt-2">
+                          Use the form above to add your preferred languages
+                        </p>
+                      </div>
+                    )}
+
+                    {getFieldError("language_preferences") && (
+                      <p className="text-red-500 text-sm mt-2">
+                        {getFieldError("language_preferences")}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -808,7 +940,11 @@ export default function ProfileSetupPage() {
                           instagram: e.target.value,
                         })
                       }
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("social_links")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="@yourusername"
                     />
                   </div>
@@ -835,7 +971,11 @@ export default function ProfileSetupPage() {
                           telegram: e.target.value,
                         })
                       }
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("social_links")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="@yourusername"
                     />
                   </div>
@@ -862,11 +1002,21 @@ export default function ProfileSetupPage() {
                           whatsapp: e.target.value,
                         })
                       }
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className={`border-gray-300 focus:border-blue-500 focus:ring-blue-500 ${
+                        isFieldError("social_links")
+                          ? "border-red-500 focus:border-red-500"
+                          : ""
+                      }`}
                       placeholder="+7 XXX XXX XXXX"
                     />
                   </div>
                 </div>
+
+                {getFieldError("social_links") && (
+                  <p className="text-red-500 text-sm mt-2">
+                    {getFieldError("social_links")}
+                  </p>
+                )}
               </div>
             </Card>
 
@@ -920,7 +1070,7 @@ export default function ProfileSetupPage() {
                 {isSaving ? (
                   <>
                     <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Submitting Profile...
+                    Completing Profile...
                   </>
                 ) : (
                   <>

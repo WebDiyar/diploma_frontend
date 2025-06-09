@@ -179,13 +179,13 @@ export default function TermsStep({
         <DialogTrigger asChild>
           <Button
             variant="outline"
-            className="w-full flex items-center justify-center bg-gray-50 hover:bg-gray-100 border-gray-300 h-12 font-medium"
+            className="w-full flex items-center justify-center hover:bg-gray-100 border-gray-300 h-12 font-medium"
           >
             <Eye className="h-4 w-4 mr-2" />
             Preview Listing
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-hidden flex flex-col bg-white">
           <DialogHeader className="border-b pb-4">
             <DialogTitle className="text-xl text-center">
               Listing Preview

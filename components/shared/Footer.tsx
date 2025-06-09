@@ -3,7 +3,6 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { SocialIcon } from "react-social-icons";
-import { Label } from "../ui/label";
 
 const Footer = () => {
   return (
@@ -13,7 +12,6 @@ const Footer = () => {
           {/* Logo and Tagline */}
           <div className="flex flex-col space-y-1 md:space-y-4">
             <div className="flex items-center space-x-2">
-              {/* <div className="w-[140px] h-[55px] bg-red-300"></div> */}
               <Image
                 src="/nav/aitu_logo.png"
                 alt="Astana IT University Logo"
@@ -54,10 +52,10 @@ const Footer = () => {
             <h3 className="text-base font-bold text-blue-700">NAVIGATION</h3>
             <nav className="flex flex-col space-y-3">
               <Link
-                href="/about-us"
+                href="/"
                 className="text-base hover:text-blue-700 transition-colors"
               >
-                About Us
+                Home
               </Link>
               <Link
                 href="/faq"
@@ -70,28 +68,28 @@ const Footer = () => {
 
           {/* Tenants */}
           <div className="flex flex-col space-y-1 md:space-y-4">
-            <h3 className="text-base font-bold text-blue-700">TENANTS</h3>
+            <h3 className="text-base font-bold text-blue-700">DASHBOARDS</h3>
             <nav className="flex flex-col space-y-3">
-              <Label className="text-base hover:text-blue-700 transition-colors">
-                Video Chat
-              </Label>
+              {/* <Label className="text-base hover:text-blue-700 transition-colors">
+                Finding Apartaments
+              </Label> */}
               <Link
-                href=""
+                href="/apartments"
                 className="text-base hover:text-blue-700 transition-colors"
               >
-                Housing Guide
+                Finding Apartaments
               </Link>
               <Link
-                href="/terms"
+                href="/my-apartments"
                 className="text-base hover:text-blue-700 transition-colors"
               >
-                Terms & Conditions
+                My Apartaments
               </Link>
               <Link
-                href="/privacy"
+                href="/booking"
                 className="text-base hover:text-blue-700 transition-colors"
               >
-                Privacy Policy
+                Booking
               </Link>
             </nav>
           </div>
